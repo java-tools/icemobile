@@ -15,8 +15,7 @@
   --%>
 
 <%
-
-    response.sendRedirect("./mediacast.jsf");
-
+    String query = request.getQueryString();
+    response.sendRedirect("./mediacast.jsf"+ (query != null ? "?" + query : ""));
 %>
 

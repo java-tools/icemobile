@@ -96,7 +96,10 @@
     self.viewController.launchedFromApp = NO;
     NSLog(@"handleOpenURL %@ %@", sourceApplication, url);
     NSString *reqString = [url absoluteString];
-    NSString *body = [reqString substringFromIndex:[@"icemobile://" length]];
+    NSString *body = [reqString substringFromIndex:[@"icemobile:" length]];
+    if ([body hasPrefix:@"//"])  {
+        body = [reqString substringFromIndex:[@"//" length]];
+    }
     NSDictionary *params = 
             [self.viewController.nativeInterface parseQuery:body];
 
@@ -108,8 +111,22 @@
     self.viewController.returnURL = [params objectForKey:@"r"];
     self.viewController.currentParameters = [params objectForKey:@"p"];
     self.viewController.currentCommand = [params objectForKey:@"c"];
+    self.viewController.splashParameters = [params objectForKey:@"s"];
+    self.viewController.returnHash = [params objectForKey:@"h"];
     self.viewController.currentSessionId = [params objectForKey:@"JSESSIONID"];
     LogDebug(@"found JSESSIONID %@", [params objectForKey:@"JSESSIONID"]);
+
+    NSDictionary *splashParts = 
+       [self.viewController.nativeInterface parseQuery:self.viewController.splashParameters];
+    NSString *splashImageURL = [splashParts objectForKey:@"i"];
+    if (nil != splashImageURL)  {
+NSLog(@"splash image URL %@", splashImageURL);
+        NSURL *imageURL = [NSURL URLWithString:splashImageURL];
+        NSData *imageData = [NSData dataWithContentsOfURL:imageURL];
+        UIImage *image = [UIImage imageWithData:imageData];
+        [self.viewController.splashImage setImage:image];
+    }
+
     [self.viewController dispatchCurrentCommand];
 
     return YES;

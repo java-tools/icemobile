@@ -27,6 +27,9 @@
     NSString *currentParameters;
     NSString *currentCommand;
     NSString *currentSessionId;
+    NSString *currentEncodedThumbnail;
+    NSString *splashParameters;
+    NSString *returnHash;
     NSData *deviceToken;
     NSDictionary *confirmMessages;
     NSDictionary *confirmTitles;
@@ -46,6 +49,8 @@
     UIButton *camcorderButton;
     UIButton *microphoneButton;
     UIButton *qrButton;
+    UIButton *openButton;
+    UIImageView *splashImage;
 }
 
 @property (retain) NativeInterface *nativeInterface;
@@ -54,6 +59,9 @@
 @property (retain) NSString *currentParameters;
 @property (retain) NSString *currentCommand;
 @property (retain) NSString *currentSessionId;
+@property (retain) NSString *currentEncodedThumbnail;
+@property (retain) NSString *splashParameters;
+@property (retain) NSString *returnHash;
 @property (retain) NSData *deviceToken;
 @property (retain) NSDictionary *confirmMessages;
 @property (retain) NSDictionary *confirmTitles;
@@ -73,6 +81,8 @@
 @property (nonatomic, retain) IBOutlet UIButton *camcorderButton;
 @property (nonatomic, retain) IBOutlet UIButton *microphoneButton;
 @property (nonatomic, retain) IBOutlet UIButton *qrButton;
+@property (nonatomic, retain) IBOutlet UIButton *openButton;
+@property (nonatomic, retain) IBOutlet UIImageView *splashImage;
 
 - (void) applicationWillResignActive;
 - (void) applicationDidEnterBackground;
@@ -85,7 +95,6 @@
 - (void) flipButton:(UIButton*)theButton;
 - (IBAction) doMediacast;
 - (IBAction) doMobileshowcase;
-- (IBAction) chooseAction;
 - (IBAction) returnPressed;
 - (IBAction) actionPressed:(id)sender;
 - (IBAction) showLicense;

@@ -22,7 +22,7 @@
 }
 /* padding for pagepanel */
 .mobi-tabset.mobi-tabset-tabs-top-header{
-    padding-top: 39px;
+    padding-top: 40px;
 }
 .mobi-tabset.mobi-tabset-tabs-bottom-footer{ 
     padding-bottom:40px;
@@ -83,6 +83,24 @@
     height: 40px;
     float: left;
     @include border-box;
+}
+
+.mobi-tabset > .mobi-tabset-tabs > ul > li,
+.mobi-tabset > .mobi-tabset-tabs > ul > li.ui-state-active {
+  border-right:1px solid rgba(0,0,0,.1);
+  border-bottom:1px solid rgba(0,0,0,.1);
+}
+
+.mobi-tabset > .mobi-tabset-tabs > ul > li,
+.mobi-tabset > .mobi-tabset-tabs > ul > li.ui-state-active {
+  border-right:1px solid rgba(0,0,0,.1);
+  border-bottom:1px solid rgba(0,0,0,.1);
+  border-left:0;
+  border-top:0;
+}
+
+.mobi-tabset > .mobi-tabset-tabs > ul > li:last-child {
+  border-right:none;
 }
 .mobi-tabpage-hidden { 
     display: none; 

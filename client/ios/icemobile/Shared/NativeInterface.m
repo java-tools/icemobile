@@ -52,6 +52,7 @@
 @synthesize popoverSource;
 @synthesize motionManager;
 @synthesize locationManager;
+@synthesize documentController;
 
 static char base64EncodingTable[64] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -67,7 +68,7 @@ static char base64EncodingTable[64] = {
         self.qrScanner.nativeInterface = self;
         NSString *tempDir = NSTemporaryDirectory ();
         self.soundFilePath = [tempDir stringByAppendingString: @"sound.mp4"];
-        self.popoverSource = CGRectMake(200.0, 200.0, 0.0, 0.0);
+        self.popoverSource = CGRectMake(200.0, 200.0, 40.0, 40.0);
     }
     
     return self;
@@ -109,6 +110,8 @@ static char base64EncodingTable[64] = {
         [self scan:[params objectForKey:@"id"]];
     } else if ([@"aug" isEqualToString:commandName])  {
         [self aug:[params objectForKey:@"id"] locations:params];
+    } else if ([@"open" isEqualToString:commandName])  {
+        [self open:[params objectForKey:@"id"] url:[params objectForKey:@"url"]];
     } else if ([@"fetchContacts" isEqualToString:commandName])  {
         [self address:[params objectForKey:@"id"]];
     } else if ([@"sms" isEqualToString:commandName])  {
@@ -198,6 +201,26 @@ static char base64EncodingTable[64] = {
     [audioController release];
     
     return YES;
+}
+
+- (void)open:(NSString*)openId url:(NSString*)url  {
+    NSURL *remoteURL = [NSURL URLWithString:url];
+NSLog(@"open %@ -- %@", openId, url);
+    NSString *localName = [[[remoteURL absoluteString] 
+            componentsSeparatedByString:@"/"] lastObject];
+    NSString *filePath = [NSTemporaryDirectory() 
+        stringByAppendingPathComponent:localName];
+    NSData *fileData = [NSData dataWithContentsOfURL:remoteURL];
+    [fileData writeToFile:filePath atomically:YES];
+    NSURL *fileURL = [NSURL fileURLWithPath: filePath];
+    NSLog(@"open %@", fileURL);
+
+    self.documentController = 
+            [UIDocumentInteractionController 
+                    interactionControllerWithURL:fileURL];
+    [self.documentController 
+            presentOpenInMenuFromRect:popoverSource 
+            inView:self.controller.view animated:YES];
 }
 
 - (void)recordStart  {
@@ -433,8 +456,9 @@ static char base64EncodingTable[64] = {
 }
 
 - (void)scanResult: (NSString*)text  {
+NSLog(@"scanResult %@", text);
     NSString *scanName = self.activeDOMElementId;
-    [controller completePost:text forComponent:scanName
+    [controller completeSmallPost:text forComponent:scanName
             withName:scanName];
 }
 
@@ -737,10 +761,11 @@ NSLog(@"Found record %@", result);
 
 - (BOOL)geospy:(NSString*) geoId withStrategy:(NSString*) strategy  {
     self.geospyName = geoId;
-    if (nil == self.locationManager)
+    if (nil == self.locationManager)  {
         self.locationManager = [[CLLocationManager alloc] init];
- 
-    self.locationManager.delegate = self;
+        self.locationManager.delegate = self;
+    }
+
     if ([@"continuous" isEqualToString:strategy]) {
         NSLog(@"geospy starting continuous updates");
         [self.locationManager startUpdatingLocation];
@@ -755,8 +780,27 @@ NSLog(@"Found record %@", result);
         [self.locationManager startMonitoringSignificantLocationChanges];
         self.monitoringLocation = YES;
     };
-    [self.controller doCancel];
+
+    if (self.monitoringLocation)  {
+        CLLocation* location = self.locationManager.location;
+        NSString *geoResult = [NSString stringWithFormat:@"%+.6f,%+.6f,%+.6f",
+            location.coordinate.latitude,
+            location.coordinate.longitude,
+            location.altitude];
+        NSLog(@"initial location  %@", geoResult);
+    }
+
+    //don't immediately return to the browser if the user has not confirmed
+    //geolocation permission
+    if (kCLAuthorizationStatusNotDetermined !=
+            [CLLocationManager authorizationStatus])  {
+        [self.controller doCancel];
+    }
     return YES;
+}
+
+- (NSString*)deviceID  {
+    return [[[UIDevice currentDevice] identifierForVendor] UUIDString];
 }
 
 - (void)locationManager:(CLLocationManager *)manager

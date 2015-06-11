@@ -80,7 +80,7 @@ public class ResourceUploadInterceptor extends HandlerInterceptorAdapter{
                 processUploads(request, store);
             }
             else{
-                LOG.debug("missing @ICEmobileResourceStore annotation on " + beanClass.getName() +
+                LOG.warn("missing @ICEmobileResourceStore annotation on " + beanClass.getName() +
                 		"controller class, cannot process uploads");
             }
         }

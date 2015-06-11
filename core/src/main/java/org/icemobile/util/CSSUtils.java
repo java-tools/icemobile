@@ -26,10 +26,10 @@ public class CSSUtils {
     public static final String HIDDEN = "ui-screen-hidden";
     
     /* Mobi Style Classes */
-    public static final String STYLECLASS_BUTTON = "mobi-button ui-btn-up-c";
+    public static final String STYLECLASS_BUTTON = "mobi-button ui-state-default ui-widget";
     public static final String STYLECLASS_BUTTON_DISABLED = " mobi-button-dis";
-    public static final String STYLECLASS_BUTTON_ATTENTION = "mobi-button-attention";
-    public static final String STYLECLASS_BUTTON_IMPORTANT = "mobi-button-important";
+    public static final String STYLECLASS_BUTTON_ATTENTION = "mobi-button-attention ui-state-highlight";
+    public static final String STYLECLASS_BUTTON_IMPORTANT = "mobi-button-important ui-state-error";
     public static final String STYLECLASS_BUTTON_BACK = "mobi-button-back";
     
     /* jQuery Mobile Classes */
@@ -48,7 +48,7 @@ public class CSSUtils {
     public static final String STYLECLASS_COLLAPSIBLECONTENT = "ui-collapsible-content";
     /* Bar */
     public static final String STYLECLASS_BAR_A = "ui-bar-a"; //default for headers, footers
-    public static final String STYLECLASS_BAR_B = "ui-bar-b"; //default for list group headers
+    public static final String STYLECLASS_BAR_B = "ui-bar-b ui-widget-header"; //default for list group headers
     
     /* globals */
     public static final String STYLECLASS_ACTIVE = "ui-btn-active";

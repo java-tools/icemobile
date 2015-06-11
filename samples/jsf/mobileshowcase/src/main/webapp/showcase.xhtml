@@ -27,13 +27,11 @@
     <title>ICEfaces Mobile Showcase</title>
     <mobi:deviceResource theme="#{themeBean.currentTheme}"/>
     <h:outputStylesheet library="css" name="showcase.css" media="screen"/>
-    <c:if test="#{mobiNavigationModel.selectedPanel eq 'gmap'}">
-        <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=true"/>
-    </c:if>
     <link rel="apple-touch-icon" href="./resources/images/touch-icon-iphone.png" />
     <link rel="apple-touch-icon" sizes="72x72" href="./resources/images/touch-icon-ipad.png" />
     <link rel="apple-touch-icon" sizes="114x114" href="./resources/images/touch-icon-iphone-retina.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="./resources/images/touch-icon-ipad-retina.png" />
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/flick/jquery-ui.css" />
     <mobi:googleAnalytics/>
 </h:head>
     <h:body>
@@ -44,30 +42,32 @@
             <mobi:pagePanel>
                 <f:facet name="header">
                     <h:form id="toolbar2" prependId="false" >
-                        <mobi:commandButton buttonType="back"
-                                       action="#{mobiNavigationModel.goBack}"
-                                       rendered="#{mobiNavigationModel.canGoBack}"
-                                       value="Back"/>
+                    <mobi:commandButton buttonType="back"
+                                        rendered="#{mobiNavigationModel.canGoBack}"
+                                        action="#{mobiNavigationModel.goBack}"
+                                        value="Back" />
+                    <h:panelGroup class="ui-icon container" rendered="#{mobiNavigationModel.selectedPanel eq 'menu'}">
                         <h:commandLink title="&amp;#9776;"
                                        styleClass="ui-icon ui-icon-home"
-                                       action="#{mobiNavigationModel.goToHome}"
-                                       rendered="#{mobiNavigationModel.selectedPanel eq 'menu'}"/>
+                                       action="#{mobiNavigationModel.goToHome}" />
+                    </h:panelGroup>
+                    <h:panelGroup class="ui-icon container" rendered="#{mobiNavigationModel.selectedPanel eq 'splash'}">
                         <h:commandLink title="&amp;#9776;"
                                        styleClass="ui-icon ui-icon-menu"
-                                       action="#{mobiNavigationModel.goToMenu}"
-                                       rendered="#{mobiNavigationModel.selectedPanel eq 'splash'}"/>
+                                       action="#{mobiNavigationModel.goToMenu}" />
+                    </h:panelGroup>
                     </h:form>
                     <h1 class="ui-title">#{mmsgs[mobiNavigationModel.selectedDestination.title]}</h1>
                     <ui:insert name="toolBarContent"/>
                 </f:facet>
-        
+
                 <f:facet name="body">
                     <ui:include src="/WEB-INF/includes/content/content-stack.xhtml">
                         <ui:param name="selectedPanel"
                                   value="#{mobiNavigationModel.selectedPanel}"/>
                     </ui:include>
                 </f:facet>
-        
+
                 <f:facet name="footer">
                     <h:form styleClass="theme">
                         <icecore:singleSubmit rendered="false"/>
@@ -113,7 +113,7 @@
             preloaded[3] = document.createElement('img');
             preloaded[3].setAttribute('src','./resources/images/auction/iceskate.png');
         </script>
-        
+
     </h:body>
 </f:view>
 </html>

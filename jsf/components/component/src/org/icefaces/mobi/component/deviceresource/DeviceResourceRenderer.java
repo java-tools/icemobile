@@ -105,7 +105,6 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
         
         ResponseWriter writer = context.getResponseWriter();
         
-        writer.write(META_CONTENTTYPE);
         writer.write(String.format(LINK_FAV_ICON, contextRoot));
         writer.write(String.format(LINK_SHORTCUT_ICON, contextRoot));
         if( !desktop ){
@@ -122,7 +121,8 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
                 }
             }
         }
-        Theme theme = Theme.getEnum((String)comp.getAttributes().get("theme"));
+        String themeParam = context.getExternalContext().getRequestParameterMap().get("theme");
+        Theme theme = Theme.getEnum(themeParam != null ? themeParam : (String)comp.getAttributes().get("theme"));
         if( theme == null ){
             String targetView = (String)comp.getAttributes().get("view");
             theme = CSSUtils.deriveTheme(targetView, JSFUtils.getRequest());
@@ -250,6 +250,9 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
         }
         if( client.isDesktopBrowser()){
             markers += " desktop";
+        }
+        if( client.isSimulator() ){
+            markers += " simulator";
         }
         writer.writeText("document.documentElement.className = document.documentElement.className+'" 
                 + markers + "'; if (window.addEventListener) window.addEventListener('load', function() {document.body.className = 'ui-body-c';});", null);

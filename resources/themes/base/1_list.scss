@@ -23,26 +23,23 @@
     padding: 0;
 }
 
-.mobi-list {
-    margin-bottom: 10px;
-}
-
 .mobi-list-inset {
     margin: 8px;
 }
 
-.mobi-list-item {
+.mobi-list > .mobi-list-item {
     margin: 0;
     font-size: 15px;
     font-weight: bold;
     list-style: none;
+    overflow: hidden;
 }
 
 .mobi-list-item-group {
     font-weight: bold;
     padding: 8px 10px;
     top: 0;
-    line-height: 26px;
+    line-height: 23px;
     @include border-box;
 }
 
@@ -52,18 +49,48 @@
 
 .mobi-list > .mobi-list-item > .mobi-list-item-default > a {
     text-decoration: none;
-    display: block;
-    padding: 15px 25px;
+    display: inline-block;
+    padding: 10px 25px;
+    width:91%;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.mobi-list > .mobi-list-item {
+  border:1px solid rgba(0,0,0,.1);
+}
+
+.mobi-list:not(.mobi-list-inset) > .mobi-list-item {
+  border-top:0;
+}
+
+.mobi-list.mobi-list-inset > .mobi-list-item:not(:first-child) {
+  border-top:0;
+}
+
+.mobi-list:not(.mobi-list-inset) > .mobi-list-item {
+  border-left:0;
 }
 
 .mobi-list-item-default {
     margin: 0;
     padding: 0;
+    overflow: auto;
+    
 }
 
-.mobi-list-item-default > span {
+.mobi-list-item-default > span:first-child {
     padding: 15px 25px;
     display: inline-block;
+    width:91%;
+    box-sizing: border-box;
+    vertical-align: middle;
+}
+
+.mobi-list-item-default > span.icon-angle-right {
+  font-size:150%;
+  vertical-align: middle;
+  cursor: pointer;
 }
 
 .mobi-list-item-custom {
@@ -72,6 +99,7 @@
     margin: 0;
     padding: 0;
 }
+
 
 
 

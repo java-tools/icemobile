@@ -44,6 +44,7 @@
 }
 .mobi-pagePanel-header{
     top: 0;
+    border-bottom:1px solid rgba(0,0,0,.1);
 }
 .mobi-pagePanel-footer{
     bottom: 0;
@@ -75,4 +76,9 @@
 }
 .mobi-pagePanel .mobi-pagePanel-body-nofooter {
     padding-bottom: 0 !important;
+}
+.mobi-pagePanel-body.ui-widget-content {
+    border-left-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
 }

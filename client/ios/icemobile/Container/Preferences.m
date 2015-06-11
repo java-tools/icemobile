@@ -32,6 +32,7 @@
 @synthesize quitButton;
 @synthesize reloadButton;
 @synthesize clearButton;
+@synthesize openInButton;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -86,6 +87,7 @@
     [IceUtil makeFancyButton:quitButton];
     [IceUtil makeFancyButton:reloadButton];
     [IceUtil makeFancyButton:clearButton];
+    [IceUtil makeFancyButton:openInButton];
     self.isFancy = YES;
 }
 
@@ -132,6 +134,12 @@
     NSLog(@"Clear History pressed");
     [self clearHistory];
     [historyPicker reloadAllComponents];
+}
+
+- (IBAction) doOpenIn {
+    NSURL *remoteURL = [mainViewController getCurrentURL];
+    [self.mainViewController.nativeInterface open:@""
+            url:[remoteURL absoluteString]];
 }
 
 - (void) clearHistory {

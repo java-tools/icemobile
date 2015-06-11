@@ -34,6 +34,7 @@
         CLLocationManagerDelegate> {
 
 	UIViewController<NativeInterfaceViewController> *controller;
+    UIDocumentInteractionController *documentController;
     NSString *userAgent;
     NSString *activeDOMElementId;
     NSString *geospyName;
@@ -59,6 +60,7 @@
 }
 
 @property (retain) UIViewController<NativeInterfaceViewController> *controller;
+@property (nonatomic, retain) UIDocumentInteractionController *documentController;
 @property (retain) NSString *userAgent;
 @property (retain) NSString *activeDOMElementId;
 @property (retain) NSString *geospyName;
@@ -100,6 +102,7 @@
 - (void)augMarkerDismiss;
 - (void)startMotionManager;
 - (void)stopMotionManager;
+- (void)open:(NSString*)openId url:(NSString*)url;
 - (void)recordStart;
 - (void)recordStop;
 - (void)recordDismiss;
@@ -118,5 +121,6 @@
 - (void)dismissScan;
 - (NSString *) base64StringFromData: (NSData *)data;
 - (void)multipartPost: (NSDictionary *)parts toURL: (NSString *)url;
+- (NSString*)deviceID;
 
 @end

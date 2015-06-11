@@ -21,6 +21,7 @@ import org.icefaces.mobi.utils.HTML;
 import org.icemobile.util.CSSUtils;
 
 import javax.faces.component.UIComponent;
+import javax.faces.component.html.HtmlCommandLink;
 import javax.faces.context.FacesContext;
 import javax.faces.context.ResponseWriter;
 import javax.faces.render.Renderer;
@@ -51,19 +52,30 @@ public class OutputListItemRenderer extends Renderer {
                 styleClass += " " + userDefinedClass;
             }
         }
-        writer.writeAttribute("class", styleClass, "styleClass");
+        writer.writeAttribute("class", styleClass, null);
+
         if (item.getStyle() !=null){
              writer.writeAttribute(HTML.STYLE_ATTR, item.getStyle(), HTML.STYLE_ATTR);
         }
+
         writer.startElement(HTML.DIV_ELEM, uiComponent);
         writer.writeAttribute("class", OutputListItem.OUTPUTLISTITEMDEFAULT_CLASS, null);
     }
 
     public void encodeEnd(FacesContext facesContext, UIComponent uiComponent)
             throws IOException {
+        OutputListItem item = (OutputListItem) uiComponent;
         ResponseWriter writer = facesContext.getResponseWriter();
+        if (!item.isGroup() && (item.getChildren().size() == 1 && item.getChildren().get(0) instanceof HtmlCommandLink))
+            writeArrowIcon(writer);
         writer.endElement(HTML.DIV_ELEM);
         writer.endElement(HTML.LI_ELEM);
+    }
+
+    private void writeArrowIcon(ResponseWriter writer) throws IOException {
+        writer.startElement(HTML.SPAN_ELEM, null);
+        writer.writeAttribute(HTML.CLASS_ATTR, "icon-angle-right", null);
+        writer.endElement(HTML.SPAN_ELEM);
     }
 
 }

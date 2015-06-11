@@ -261,6 +261,9 @@ if (!window.ice.mobi) {
 if (!window['mobi']) {
     window.mobi = {};
 }
+if (!window.ice.mobi.impl) {
+    window.ice.mobi.impl = {};
+}
 
 if (!window.console) {
     console = {};
@@ -558,8 +561,12 @@ ice.mobi.extend = function(targetObject, sourceObject) {
     for (var attrname in sourceObject) { targetObject[attrname] = sourceObject[attrname]; }
 }
 mobi.registerAuxUpload = function (sessionid, uploadURL) {
-    var sxURL = "icemobile://c=register&r=" +
+
+    var splashClause = ice.mobi.impl.getSplashClause();
+
+    var sxURL = "icemobile:c=register&r=" +
                         escape(window.location) + "&JSESSIONID=" + sessionid +
+                        splashClause +
                         "&u=" + escape(uploadURL);
 
     if (window.chrome)  {
@@ -883,28 +890,51 @@ if (window.addEventListener) {
     }, false);
 
     window.addEventListener("hashchange", function () {
-        if ("#icemobilesx" !== window.location.hash)  {
-            return;
+        var data = ice.mobi.getDeviceCommand();
+        var deviceParams;
+        if (null != data)  {
+            var name;
+            var value;
+            var needRefresh = true;
+            if ("" != data)  {
+                deviceParams = ice.mobi.unpackDeviceResponse(data);
+                if (deviceParams.name)  {
+                    name = deviceParams.name;
+                    value = deviceParams.value;
+                    ice.mobi.setInput(name, name, value);
+                    needRefresh = false;
+                }
+            }
+            if (needRefresh)  {
+                if (window.ice.ajaxRefresh)  {
+                    ice.ajaxRefresh();
+                }
+            }
+            setTimeout( function(){
+                var loc = window.location;
+                //changing hash to temporary value ensures changes
+                //to repeated values are detected
+                history.pushState("", document.title,
+                        loc.pathname + loc.search + "#clear-icemobilesx");
+                history.pushState("", document.title,
+                        loc.pathname + loc.search);
+                var sxEvent = {
+                    name : name,
+                    value : value
+                };
+                if ("!r" === name.substring(0,2))  {
+                    //need to implement iteration over the full set
+                    //of response values
+                    sxEvent.response = value;
+                    sxEvent.name = "";
+                    sxEvent.value = "";
+                }
+                if (ice.mobi.deviceCommandCallback)  {
+                    ice.mobi.deviceCommandCallback(sxEvent);
+                    ice.mobi.deviceCommandCallback = null;
+                }
+            }, 1);
         }
-        setTimeout( function(){
-            var loc = window.location;
-            history.pushState("", document.title, loc.pathname + loc.search);
-        }, 1);
-    }, false);
-
-    document.addEventListener("webkitvisibilitychange", function () {
-	if (document.webkitHidden) {
-            if (ice.push) {
-		ice.log.debug(ice.log, 'PAUSING from visibility change');
-		ice.push.connection.pauseConnection();
-            }
-	}
-	else {
-            if (ice.push) {
-		ice.log.debug(ice.log, 'RESUMING from visibility change');
-		ice.push.connection.resumeConnection();
-            }
-	}
     }, false);
 }
 /* javascript for mobi:commandButton component put into component.js as per MOBI-200 */
@@ -996,6 +1026,16 @@ ice.mobi.formOf = function(element) {
     }
 }
 
+ice.mobi.getDeviceCommand = function()  {
+    var sxkey = "#icemobilesx";
+    var sxlen = sxkey.length;
+    var locHash = "" + window.location.hash;
+    if (sxkey === locHash.substring(0, sxlen))  {
+        return locHash.substring(sxlen + 1);
+    }
+    return null;
+}
+
 ice.mobi.sx = function (element, uploadURL) {
     var ampchar = String.fromCharCode(38);
     var form = ice.mobi.formOf(element);
@@ -1044,25 +1084,56 @@ ice.mobi.sx = function (element, uploadURL) {
         if (lastHash > 0) {
             returnURL = returnURL.substring(0, lastHash);
         }
-//ajax page update upon return is not yet implemented
-//        returnURL += "#icemobilesx";
+        returnURL += "#icemobilesx";
     }
 
     if ("" != params) {
         params = ubConfig + params;
     }
 
+//    var splashClause = ice.mobi.impl.getSplashClause();
+
     var sessionidClause = "";
     if ("" != sessionid) {
         sessionidClause = "&JSESSIONID=" + escape(sessionid);
     }
-    var sxURL = "icemobile://c=" + escape(command +
+    var sxURL = "icemobile:c=" + escape(command +
             "?id=" + id + ampchar + params) +
             "&u=" + escape(uploadURL) + "&r=" + escape(returnURL) +
             sessionidClause +
+//            splashClause +
             "&p=" + escape(ice.mobi.serialize(form, false));
 
     window.location = sxURL;
+}
+
+ice.mobi.impl.getSplashClause = function()  {
+    var splashClause = "";
+    if (null != ice.mobi.splashImageURL)  {
+        var splashImage = "i=" + escape(ice.mobi.splashImageURL);
+        splashClause = "&s=" + escape(splashImage);
+    }
+    return splashClause;
+}
+
+ice.mobi.unpackDeviceResponse = function (data)  {
+    var result = {};
+    var params = data.split("&");
+    var len = params.length;
+    for (var i = 0; i < len; i++) {
+        var splitIndex = params[i].indexOf("=");
+        var paramName = unescape(params[i].substring(0, splitIndex));
+        var paramValue = unescape(params[i].substring(splitIndex + 1));
+        if ("!" === paramName.substring(0,1))  {
+            //ICEmobile parameters are set directly
+            result[paramName.substring(1)] = paramValue;
+        } else  {
+            //only one user value is supported
+            result.name = paramName;
+            result.value = paramValue;
+        }
+    }
+    return result;
 }
 
 ice.mobi.invoke = function(element)  {
@@ -1077,6 +1148,29 @@ ice.mobi.invoke = function(element)  {
     } else {
         ice.mobi.sx(element);
     }
+}
+
+ice.mobi.setInput = function(target, name, value, vtype)  {
+    var hiddenID = name + "-hid";
+    var existing = document.getElementById(hiddenID);
+    if (existing)  {
+        existing.setAttribute("value", value);
+        return;
+    }
+    var targetElm = document.getElementById(target);
+    if (!targetElm)  {
+        return;
+    }
+    var hidden = document.createElement("input");
+
+    hidden.setAttribute("type", "hidden");
+    hidden.setAttribute("id", hiddenID);
+    hidden.setAttribute("name", name);
+    hidden.setAttribute("value", value);
+    if (vtype)  {
+        hidden.setAttribute("data-type", vtype);
+    }
+    targetElm.parentNode.insertBefore(hidden, targetElm);
 }
 
 ice.mobi.storeLocation = function(id, coords) {
@@ -1329,7 +1423,7 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
                         var compd = document.defaultView.getComputedStyle(n, null);
                         return n.clientWidth - Math.round(parseFloat(compd.paddingLeft)) - Math.round(parseFloat(compd.paddingRight));
                 });
-    
+
                 /* fix body column widths */
                 for (var i = 0; i < frbcWidths.length; i++) {
                     if( sheet.insertRule ){
@@ -1343,19 +1437,19 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
                         var compd = document.defaultView.getComputedStyle(n, null);
                         return n.clientWidth - Math.round(parseFloat(compd.paddingLeft)) - Math.round(parseFloat(compd.paddingRight));
                     });
-    
+
                 var dupeFootCellWidths = Array.prototype.map.call(
                     dupeFootCells,
                     function(n) {
                         var compd = document.defaultView.getComputedStyle(n, null);
                         return n.clientWidth - Math.round(parseFloat(compd.paddingLeft)) - Math.round(parseFloat(compd.paddingRight));
                     });
-    
+
                 /* copy head col widths from duplicate header */
                 for (var i = 0; i < dupeHeadCellWidths.length; i++) {
                     headCells[i].style.width = dupeHeadCellWidths[i] + 'px';
                 }
-    
+
                 /* copy foot col widths from duplicate footer */
                 if (footCells.length > 0)
                     for (var i = 0; i < dupeFootCellWidths.length; i++) {
@@ -1516,7 +1610,7 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
             if (index == touchedRowIndex[e.changedTouches[0].identifier].i && y && x){
                 tapFlash(e.delegateTarget);
 
-                if (e.delegateTarget.classList.contains('ui-bar-e'))
+                if (e.delegateTarget.classList.contains('ui-state-active'))
                     deactivateDetail()
                 else activateRow(e);
             }
@@ -1669,7 +1763,7 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
             det.removeAttribute('data-index');
             getIndexInput(det).setAttribute('value', '-1');
             Array.prototype.every.call(getNode('bodyrows'), function(e) {
-                e.classList.remove('ui-bar-e');
+                e.classList.remove('ui-state-active');
                 return true
             });
             recalcScrollHeight();
@@ -1754,10 +1848,10 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
                 details = getNode('det'),
                 indexIn = getIndexInput(details);
 
-            event.delegateTarget.classList.add('ui-bar-e');
+            event.delegateTarget.classList.add('ui-state-active');
 
             var sib = event.delegateTarget.nextElementSibling,
-                removeActiveClass = function (s) { s.classList.remove('ui-bar-e'); };
+                removeActiveClass = function (s) { s.classList.remove('ui-state-active'); };
 
             while (sib != null) {removeActiveClass(sib); sib = sib.nextElementSibling;};
             sib = event.delegateTarget.previousElementSibling;
@@ -1832,7 +1926,7 @@ ice.mobi.addStyleSheet = function (sheetId, parentSelector) {
             return this.instances[clientId];
         }
     }
-    
+
 })(ice.mobi);
 
 /* touch active state support */
@@ -1861,9 +1955,9 @@ ice.mobi.addListener(document, "touchstart", function(){});
                 }
                 i++;
             }
-            
+
         }
-        
+
     };
     if( window.innerHeight ){
         window.addEventListener('load', ice.mobi.sizePagePanelsToViewPort);
@@ -1872,4 +1966,355 @@ ice.mobi.addListener(document, "touchstart", function(){});
     }
 }());
 
+//view manager
+(function(im){
+    var viewHistory =  [];
+    var transitionType = 'horizontal'; //horizontal, vertical
+    var currentWidth = 0;
+    var currentHeight = 0;
+    var proxyFormId;
+    var transitionDuration = 100;
+    var vendor = (function () {
+        var styles = window.getComputedStyle(document.documentElement, ''),
+          pre = (Array.prototype.slice
+            .call(styles)
+            .join('')
+            .match(/-(moz|webkit|ms)-/) || (styles.OLink === '' && ['', 'o'])
+          )[1],
+          dom = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))[1];
+        return {
+          dom: dom,
+          lowercase: pre,
+          css: '-' + pre + '-',
+          js: pre[0].toUpperCase() + pre.substr(1)
+        };
+      })();
+    var vendorPrefix = vendor.lowercase;
+
+    function getCurrentView(){
+        var views = document.getElementsByClassName('mobi-vm-view');
+        for( var i = 0 ; i < views.length ; i++ ){
+            var selected = views[i].getAttribute('data-selected');
+            if( selected == "true" ){
+                return views[i].getAttribute('data-view');
+            }
+        }
+    }
+    function getNodeForView(view){
+        var views = document.getElementsByClassName('mobi-vm-view');
+        for( var i = 0 ; i < views.length ; i++ ){
+            var viewId = views[i].getAttribute('data-view');
+            if( viewId ==  view ){
+                return views[i];
+            }
+        }
+    }
+    function supportsTransitions(){
+        var b = document.body || document.documentElement;
+        var s = b.style;
+        var p = 'transition';
+        if(typeof s[p] == 'string') {return true; }
+
+        var v = ['Moz', 'Webkit', 'Khtml', 'O', 'ms'];
+        p = p.charAt(0).toUpperCase() + p.substr(1);
+        for(var i=0; i<v.length; i++) {
+          if(typeof s[v[i] + p] == 'string') { return true; }
+        }
+        return false;
+    }
+    function setOrientation(orient){
+        document.body.setAttribute("data-orient", orient);
+        if (orient == 'portrait'){
+            document.body.classList.remove('landscape');
+            document.body.classList.add('portrait');
+        }
+        else if (orient == 'landscape'){
+            document.body.classList.remove('portrait');
+            document.body.classList.add('landscape');
+        }
+        else{
+            document.body.classList.remove('portrait');
+            document.body.classList.remove('landscape');
+        }
+        setTimeout(scrollTo, 100, 0, 1);
+    }
+
+    function refreshViewDimensions(){
+        console.log('refreshViewDimensions()');
+        if ((window.innerWidth != currentWidth) || (window.innerHeight != currentHeight)){
+            currentWidth = window.innerWidth;
+            currentHeight = window.innerHeight;
+            var orient = (currentWidth < currentHeight) ? 'portrait' : 'landscape';
+            setOrientation(orient);
+        }
+
+        var contentHeight = currentHeight - 45; //adjust for header
+        var currentView = getNodeForView(getCurrentView());
+        if( currentView.getElementsByClassName('mobi-vm-nav-bar').length > 0 ){
+            contentHeight -= 40; //adjust for nav bar if exists
+        }
+        var contentNode = currentView.getElementsByClassName('mobi-vm-view-content')[0];
+        if( contentNode ){
+            contentNode.style.height = '' + contentHeight + 'px';
+            console.log('set view content height to ' + contentHeight);
+        }
+        else
+            console.error('ice.mobi.viewManager.refreshViewDimensions() cannot find content node for view = ' + currentView.id);
+        var menuNode = document.getElementsByClassName('mobi-vm-menu')[0];
+        if( menuNode ){
+            menuNode.style.height = '' + (currentHeight - 45) + 'px';
+            console.log('set menu height to ' + (currentHeight - 45));
+        }
+        else
+            console.error('ice.mobi.viewManager.refreshViewDimensions() cannot find menu node');
+
+    }
+
+    function getTransitionFunctions(reverse){
+        if( 'horizontal' == transitionType ){
+            return [function(from,to){
+                setTransform(to, 'translateX(' + (reverse ? '-' : '')
+                        + window.innerWidth +    'px)');
+            },function(from,to){
+                setTransform(from, 'translateX(' + (reverse ? '100%' : '-100%') + ')');
+                setTransform(to, 'translateX(0%)');
+            }];
+        }
+        else if( 'vertical' == transitionType ){
+            return [function(from,to){
+                setTransform(to, 'translateY(' + (reverse ? '-' : '')
+                        + window.innerWidth +    'px)');
+            },function(from,to){
+                setTransform(from, 'translateY(' + (reverse ? '100%' : '-100%') + ')');
+                setTransform(to, 'translateY(0%)');
+            }];
+        }
+        else if( 'flip' == transitionType ){
+            return [function(from,to){
+                setTransform(to, 'rotateY(' + (reverse ? '-' : '') + '180deg)');
+            },function(from,to){
+                setTransform(from, 'rotateY(' + (reverse ? '180deg' : '-180deg') + ')');
+                setTransform(to, 'rotateY(0deg)');
+            }];
+        }
+        else if( 'fade' == transitionType ){
+            return [function(from,to){
+                setOpacity(to, '0');
+            },function(from,to){
+                setOpacity(from, '0');
+                setOpacity(to, '1');
+            }];
+        }
+        else if( 'pageturn' == transitionType ){
+            return [function(from,to){
+                var parent = to.parentNode;
+                parent.style.webkitPerspective = 1100;
+                parent.style.webkitPerspectiveOrigin = '50% 50%';
+                var fromMirror = document.createElement('div');
+                fromMirror.id = '_' + from.id;
+                fromMirror.style.width = '50%';
+                fromMirror.style.height = '100%';
+                fromMirror.style.position = 'absolute';
+                fromMirror.style.top = '0px';
+                fromMirror.style.right = '0px';
+                fromMirror.style.webkitTransformStyle = 'preserve-3d';
+                fromMirror.innerHTML = from.innerHTML;
+                fromMirror.style.webkitTransform = 'rotateY(180deg)';
+                to.parentNode.appendChild(fromMirror);
+                from.style.display = 'none';
+                parent.style.webkitTransitionProperty = '-webkit-transform';
+                parent.style.webkitTransitionDuration = '1000ms';
+                parent.style.webkitTransitionTimingFunction = 'ease';
+                parent.style.webkitTransformOrigin = 'left';
+                parent.style.webkitTransform = 'rotateY(-180deg)';
+            },function(from,to){
+                var fromMirror = document.getElementById('_'+from.id);
+                var parent = to.parentNode;
+                parent.removeChild(fromMirror);
+                parent.style.webkitTransform = 'none';
+                parent.style.webkitTransitionProperty = 'none';
+                parent.style.webkitPerspective = 'none';
+                parent.style.webkitPerspectiveOrigin = '';
+            }];
+        }
+    }
+    function transitionFunction(prop, toStart, from, toEnd){
+        return {prop:prop, toStart: toStart, from: from, toEnd: toEnd};
+    }
+    function setTransitionDuration(elem, val){
+        if( vendorPrefix )
+            elem.style[''+ vendorPrefix + 'TransitionDuration'] = val;
+        elem.style.transitionDuration = val;
+    }
+    function setTransform(elem, transform){
+        elem.style.transitionDuration = transitionDuration;
+        if( vendorPrefix ){
+            elem.style[''+ vendorPrefix + 'TransitionDuration'] = transitionDuration;
+            elem.style[''+ vendorPrefix + 'Transform'] = transform;
+        }
+        elem.style.transform = transform;
+    }
+    function setOpacity(elem, val){
+        elem.style.transitionDuration = transitionDuration;
+        elem.style.opacity = val;
+    }
+    function setTransitionEndListener(elem, f){
+        if( vendorPrefix )
+            elem.addEventListener(''+ vendorPrefix + 'TransitionEnd', f, false);
+        elem.addEventListener('transitionEnd', f, false);
+    }
+    function removeTransitionEndListener(elem, f){
+        if( vendorPrefix )
+            elem.removeEventListener(''+ vendorPrefix + 'TransitionEnd', f, false);
+        elem.removeEventListener('transitionEnd', f, false);
+    }
+    function updateViews(fromNode, toNode, reverse){
+        console.log('updateViews() enter');
+        if( supportsTransitions() ){
+            var transitions = getTransitionFunctions(reverse);
+            transitions[0](fromNode,toNode);
+            toNode.setAttribute('data-selected', 'true');
+            setTransitionDuration(toNode, '');
+            setTimeout(transitionComplete, transitionDuration);
+            setTimeout(function(){
+                console.log('transition() for transition supported');
+                transitions[1](fromNode,toNode);
+            }, 0);
+        }
+        else{
+            toNode.style.left = "100%";
+            scrollTo(0, 1);
+            toNode.setAttribute('data-selected', 'true');
+            var percent = 100;
+            transition();
+            var timer = setInterval(transition, 0);
+
+            function transition(){
+                console.log('transition() for transition unsupported');
+                percent -= 20;
+                if (percent <= 0){
+                    percent = 0;
+                    clearInterval(timer);
+                    transitionComplete();
+                }
+                fromNode.style.left = (reverse ? (100-percent) : (percent-100)) + "%";
+                toNode.style.left = (reverse ? -percent : percent) + "%";
+            }
+        }
+
+        function transitionComplete(){
+            console.log('transitionComplete');
+            if( fromNode )
+                fromNode.removeAttribute('data-selected');
+            checkTimer = setTimeout(refreshViewDimensions, 0);
+            setTimeout(refreshView, 0, toNode);
+            if( fromNode )
+                removeTransitionEndListener(fromNode, transitionComplete);
+        }
+        console.log('updateViews() exit');
+    }
+    function refreshBackButton(toNode){
+        console.log('refreshBackButton()');
+        var headerNode = document.getElementsByClassName('mobi-vm-header')[0];
+        var backButton = headerNode.children[1];
+        var selected = getCurrentView();
+        if (backButton){
+            if( viewHistory.length == 1 ){
+                backButton.style.display = "none";
+                return;
+            }
+            else{
+                var prev = viewHistory[viewHistory.length-2];
+                if (prev ){
+                    var prevView = getNodeForView(prev);
+                    if( prevView ){
+                        backButton.style.display = "inline";
+                        var title = prevView.getAttribute('data-title');
+                        backButton.innerHTML = title ? title : "Back";
+                    }
+                }
+            }
+        }
+    }
+    function refreshBackButtonAndViewDimensions(){
+        var currentView = getNodeForView(getCurrentView());
+        refreshBackButton(currentView);
+        refreshViewDimensions();
+    }
+    function refreshView(toNode){
+        console.log('refreshView()');
+        var headerNode = document.getElementsByClassName('mobi-vm-header')[0];
+        var titleNode = headerNode.firstChild;
+        var title = toNode.getAttribute('data-title');
+        if (title){
+            titleNode.innerHTML = title;
+        }
+        refreshBackButton();
+
+    }
+    function viewHasNavBar(view){
+        return view.getElementsByClassName('mobi-vm-nav-bar').length > 0;
+    }
+
+    im.viewManager = {
+        showView: function(view){
+            console.log('showView(' + view + ') current');
+            var currentView = getCurrentView();
+            if( view == currentView ){
+                return;
+            }
+            var index = viewHistory.indexOf(view);
+            var reverse = index != -1 ;
+            if (reverse){
+                viewHistory.splice(index);
+            }
+            var fromNode = getNodeForView(currentView);
+            var toNode = getNodeForView(view);
+            viewHistory.push(toNode.getAttribute('data-view'));
+            if( toNode && fromNode ){
+                setTimeout(updateViews, 0, fromNode, toNode, reverse);
+            }
+            else if( toNode ){
+                toNode.setAttribute('data-selected', 'true');
+            }
+            document.getElementById("mobi_vm_selected").value = view;
+
+            jsf.ajax.request(proxyFormId,event,{execute:'@form', render:'@all'});
+            return false;
+        },
+        goBack: function(src){
+            var goTo = viewHistory.slice(-2,-1)[0];
+            if( goTo != undefined ){
+                im.viewManager.showView(goTo);
+            }
+            else{
+                console.error('ViewManager.goBack() invalid state history = ' + viewHistory);
+            }
+        },
+        goToMenu: function(){
+            im.viewManager.showView(menuId);
+        },
+        setState: function(transition, formId, vHistory){
+            if( vHistory.length < 1 ){
+                console.error('invalid empty history added to ViewManager.setState() aborting');
+                return;
+            }
+            var view = vHistory[vHistory.length-1];
+            transitionType = transition;
+            proxyFormId = formId;
+            viewHistory = vHistory;
+            if( view != getCurrentView()){
+                var toNode = getNodeForView(view);
+                if( toNode ){
+                    toNode.setAttribute('data-selected', 'true');
+                    document.getElementById("mobi_vm_selected").value = view;
+                }
+            }
+            refreshBackButtonAndViewDimensions();
+            ice.mobi.addListener(window, 'resize', refreshViewDimensions);
+            ice.mobi.addListener(window, 'orientationchange', refreshViewDimensions);
+        }
+
+    }
+}(ice.mobi));
 

@@ -104,8 +104,7 @@ public class SourceCodeLoaderServlet extends HttpServlet {
                     String contextPath = getServletContext().getContextPath();
 
                     toReturnHigh =  toReturnHigh.replaceFirst(
-                            "<body>", "<body> <div onclick='window.location.href=\"" +
-                            contextPath + "\";'>&nbsp;<strong><&nbsp;Return</strong>" );
+                            "<body>", "<body><style>code{ font-size: 10px; }</style> <div>" );
                     toReturnHigh =  toReturnHigh.replaceFirst(
                             "</body>", "</div></body>" );
                     responseStream.print(toReturnHigh);

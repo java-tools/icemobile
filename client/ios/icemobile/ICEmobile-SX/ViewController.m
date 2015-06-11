@@ -31,6 +31,9 @@
 @synthesize currentParameters;
 @synthesize currentCommand;
 @synthesize currentSessionId;
+@synthesize currentEncodedThumbnail;
+@synthesize splashParameters;
+@synthesize returnHash;
 @synthesize uploadProgress;
 @synthesize uploadLabel;
 @synthesize appTitle;
@@ -43,6 +46,7 @@
 @synthesize camcorderButton;
 @synthesize microphoneButton;
 @synthesize qrButton;
+@synthesize openButton;
 @synthesize arButton;
 @synthesize contactsButton;
 @synthesize deviceToken;
@@ -50,6 +54,7 @@
 @synthesize confirmTitles;
 @synthesize commandNames;
 @synthesize launchedFromApp;
+@synthesize splashImage;
 
 
 - (void) dealloc  {
@@ -82,6 +87,33 @@
     [nativeInterface multipartPost:params toURL:self.currentURL];
 }
 
+- (void)completeSmallPost:(NSString *)value forComponent:(NSString *)componentID withName:(NSString *)componentName   {
+    if ([self.returnURL hasSuffix:@"#icemobilesx"])  {
+        self.returnURL = [self.returnURL stringByAppendingString:@"_"];
+        self.returnURL = [self.returnURL stringByAppendingString:
+            [componentID stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        self.returnURL = [self.returnURL stringByAppendingString:
+            [@"=" stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        self.returnURL = [self.returnURL stringByAppendingString:
+                [value stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        if (nil != self.currentEncodedThumbnail)  {
+            self.returnURL = [self.returnURL stringByAppendingString:@"&!p="];
+            self.returnURL = [self.returnURL stringByAppendingString:
+                    [self.currentEncodedThumbnail
+                    stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        }
+        if (nil != self.returnHash)  {
+            self.returnURL = [self.returnURL stringByAppendingString:@"&!h="];
+            self.returnURL = [self.returnURL stringByAppendingString:
+                    [self.returnHash
+                    stringByAddingPercentEscapesUsingEncoding:NSASCIIStringEncoding]];
+        }
+        return;
+    }
+
+    [self completePost:value forComponent:componentID withName:componentName];
+}
+
 - (void)completePost:(NSString *)value forComponent:(NSString *)componentID withName:(NSString *)componentName   {
     [self completePostRaw:value forComponent:componentID
             withName:[@"text-" stringByAppendingString:componentName]];
@@ -105,7 +137,7 @@
     }
 
     LogInfo(@"ICEmobile-SX will open %@", safariURL);
-    [[UIApplication sharedApplication] 
+    [[UIApplication sharedApplication]
             openURL:[NSURL URLWithString:safariURL]];
 }
 
@@ -186,6 +218,13 @@ NSLog(@"hideControls");
 - (void) handleResponse:(NSString *)responseString  {
 NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
     if (!self.launchedFromApp)  {
+        if (responseString.length < 1500)  {
+            [self completeSmallPost:responseString
+                    forComponent:@"!r" withName:@"!r"];
+        } else {
+            [self completeSmallPost:@"Response size limit exceeded."
+                    forComponent:@"!r" withName:@"!r"];
+        }
         [self reloadCurrentURL];
     } else {
         [self hideProgress];
@@ -197,8 +236,13 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
     LogDebug(@"Hitch cant play audio from an ID in the page");
 }
 
-- (void)setThumbnail: (UIImage*)image at: (NSString *)thumbID  {
-    LogDebug(@"Hitch would show a thumbnail");
+- (void) setThumbnail: (UIImage*)image at: (NSString *)thumbID  {
+    NSData *scaledData =  UIImageJPEGRepresentation(image, 0.5);
+    NSString *image64 = [self.nativeInterface  base64StringFromData:scaledData];
+    NSString *dataURL = [@"data:image/jpg;base64," 
+            stringByAppendingString:image64];
+    self.currentEncodedThumbnail = dataURL;
+    NSLog(@"scaled and encoded thumbnail %d", [image64 length]);
 }
 
 
@@ -305,31 +349,6 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
                     URLWithString:@"http://www.icesoft.org/java/initicemobilesx.html"]];
 }
 
-- (IBAction) chooseAction  {
-    LogDebug(@"ViewController chooseAction %d", actionSelector.selectedSegmentIndex);
-    if (-1 == actionSelector.selectedSegmentIndex)  {
-        return;
-    }
-    self.currentURL = urlField.text;
-    [urlField resignFirstResponder];
-    self.returnURL = self.currentURL;
-    self.currentParameters = nil;
-    NSString *theCommand = [self.commandNames 
-            objectAtIndex:actionSelector.selectedSegmentIndex];
-    CGRect selectionFrame = actionSelector.frame;
-    selectionFrame = [actionSelector.superview convertRect:selectionFrame 
-            toView:self.view];
-    CGFloat cellWidth = 
-            selectionFrame.size.width / actionSelector.numberOfSegments;
-    CGFloat popOffset = selectionFrame.origin.x + 
-            cellWidth * actionSelector.selectedSegmentIndex;
-    self.nativeInterface.popoverSource = CGRectMake(popOffset, 
-            selectionFrame.origin.y, cellWidth, selectionFrame.size.height);
-    self.currentCommand = [NSString stringWithFormat:@"%@?id=undefined", theCommand];
-    [actionSelector setSelectedSegmentIndex:-1];
-    self.launchedFromApp = YES;
-    [self dispatchCurrentCommand];
-}
 
 - (IBAction) returnPressed  {
     LogDebug(@"ViewController returnPressed");
@@ -363,13 +382,19 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
     [urlField resignFirstResponder];
     self.returnURL = self.currentURL;
     self.currentParameters = nil;
+
+    if ([@"open" isEqualToString:theCommand])  {
+        params = [@"&url=" stringByAppendingString:
+            [self.currentURL  stringByAddingPercentEscapesUsingEncoding:
+                    NSASCIIStringEncoding]];
+    }
+
     CGRect selectionFrame = theButton.frame;
     selectionFrame = [theButton.superview convertRect:selectionFrame
             toView:self.view];
-    CGFloat popOffset = selectionFrame.size.width / 2;
-    self.nativeInterface.popoverSource = CGRectMake(
-            popOffset, selectionFrame.origin.y,
-            selectionFrame.size.width, selectionFrame.size.height);
+    self.nativeInterface.popoverSource = 
+            [self.urlField convertRect:self.urlField.frame 
+                toView:nativeInterface.controller.view];
     self.currentCommand = [NSString stringWithFormat:
             @"%@?id=undefined%@", theCommand, params];
     self.launchedFromApp = YES;
@@ -406,6 +431,8 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
     self.smsButton.tag = 6;
     [IceUtil makeFancyButton:self.geospyButton];
     self.geospyButton.tag = 7;
+    [IceUtil makeFancyButton:self.openButton];
+    self.openButton.tag = 8;
 
     [self hideProgress];
     [self showControls];
@@ -422,6 +449,7 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
             @"Address Book", @"fetchContacts", 
             @"Send SMS", @"sms", 
             @"Location Upload", @"geospy", 
+            @"Open File", @"open", 
             nil];
     self.confirmMessages = [NSDictionary dictionaryWithObjectsAndKeys:
             @"Register with server ", @"register", 
@@ -433,6 +461,7 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
             @"Send contact to ", @"fetchContacts", 
             @"Send SMS", @"sms", 
             @"Periodically send location to ", @"geospy", 
+            @"Open file referenced by ", @"open", 
             nil];
     self.commandNames = [NSArray arrayWithObjects:
             @"camera", 
@@ -443,6 +472,7 @@ NSLog(@"handleResponse reloadCurrentURL %d", self.launchedFromApp);
             @"fetchContacts", 
             @"sms", 
             @"geospy", 
+            @"open", 
             nil];
     if (![[NSUserDefaults standardUserDefaults] boolForKey:@"initialized"])  {
         NSLog(@"firstLaunch detected");

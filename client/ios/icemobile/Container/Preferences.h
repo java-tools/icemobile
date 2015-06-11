@@ -33,6 +33,7 @@
     UIButton *quitButton;
     UIButton *reloadButton;
     UIButton *clearButton;
+    UIButton *openInButton;
 }
 
 - (IBAction) doDone;
@@ -40,6 +41,7 @@
 - (IBAction) doQuit;
 - (IBAction) doReload;
 - (IBAction) doClear;
+- (IBAction) doOpenIn;
 - (void) update;
 - (void) dismiss;
 - (void) clearHistory;
@@ -57,5 +59,6 @@
 @property (nonatomic, retain) IBOutlet UIButton *quitButton;
 @property (nonatomic, retain) IBOutlet UIButton *reloadButton;
 @property (nonatomic, retain) IBOutlet UIButton *clearButton;
+@property (nonatomic, retain) IBOutlet UIButton *openInButton;
 
 @end
