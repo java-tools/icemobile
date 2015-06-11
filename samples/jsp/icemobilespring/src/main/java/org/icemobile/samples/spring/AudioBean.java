@@ -30,4 +30,5 @@ public class AudioBean extends MediaBean {
         this.controls = true;
         this.src = "media/audio_clip.mp3";
     }
+
 }

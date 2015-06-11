@@ -36,7 +36,7 @@ import org.icefaces.mobi.utils.MobiJSFUtils;
 
 public class ContentStackRenderer extends BaseLayoutRenderer {
 
-    private static Logger logger = Logger.getLogger(ContentStackRenderer.class.getName());
+    private static final Logger logger = Logger.getLogger(ContentStackRenderer.class.getName());
     private static final String JS_NAME = "layoutmenu.js";
     private static final String JS_MIN_NAME = "layoutmenu-min.js";
     private static final String JS_LIBRARY = "org.icefaces.component.layoutmenu";
@@ -145,23 +145,33 @@ public class ContentStackRenderer extends BaseLayoutRenderer {
         writer.startElement("script", uiComponent);
         writer.writeAttribute("type", "text/javascript", null);
         String selectedPaneId = stack.getSelectedId();
-        String selectedPaneClientId = null;
-        String homeId = null;
         boolean client = false;
-        int hashcode = MobiJSFUtils.generateHashCode(stack.getSelectedId());
-        UIComponent selPane = stack.findComponent(selectedPaneId);
+        int hashcode = MobiJSFUtils.generateHashCode(System.currentTimeMillis());
         StringBuilder sb = new StringBuilder("mobi.layoutMenu.initClient('").append(clientId).append("'");
         sb.append(",{stackId: '").append(clientId).append("'");
         sb.append(",selectedId: '").append(selectedPaneId).append("'");
         sb.append(", single: ").append(stack.getSingleView());
         sb.append(",hash: ").append(hashcode);
+        ContentPane selPane = null;
+        if( selectedPaneId == null || selectedPaneId.length() > 0 ){
+            //auto-select the first contentPane
+            selectedPaneId = stack.getChildren().get(0).getId();
+        }
+        selPane = (ContentPane)stack.findComponent(selectedPaneId);
+        //if the selectedPaneId is not valid, auto-select the first contentPane
+        if( selPane == null ){
+            selPane = (ContentPane)stack.getChildren().get(0);
+            selectedPaneId = selPane.getId();
+        }
         if (null != selPane){
+            String selectedPaneClientId = null;
             selectedPaneClientId =  selPane.getClientId(facesContext);
             sb.append(",selClientId: '").append(selectedPaneClientId).append("'");
-            client = ((ContentPane)selPane).isClient();
+            client = selPane.isClient();
         }
         if (stack.getContentMenuId() !=null){
             UIComponent menu = stack.findComponent(stack.getContentMenuId());
+            String homeId = null;
             if (null!=menu){
                homeId = menu.getClientId(facesContext);
             }

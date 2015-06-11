@@ -98,12 +98,12 @@
                                          disabled="${buttonGroupInfo.disabled}"
                                          style="${buttonGroupInfo.style}">
                     <mobi:commandButton value="Yes" id="button1"
-                             type="button"
+                             type="button"  groupId="group1"
                              buttonType="${buttonGroupInfo.buttonType}"/>
-                    <mobi:commandButton value="No"
+                    <mobi:commandButton value="No"  groupId="group1"
                             type="button"  id="button2"
                             buttonType="${buttonGroupInfo.buttonType}"/>
-                    <mobi:commandButton value="Please"
+                    <mobi:commandButton value="Please" groupId="group1"
                             type="button" id="button3"
                             buttonType="${buttonGroupInfo.buttonType}" />
                 </mobi:commandButtonGroup>
@@ -117,13 +117,7 @@
     	   <li><a href="../index.html">index</a></li>
        </ul>
    </p>
- <script type="text/javascript">
-/**	ice.mobi.userAjaxRequest = function( options){
-        if (options.jspForm){
-            options.jspForm.submit();
-        }
-    } */
-</script>
+
 </body>
 
 </html>

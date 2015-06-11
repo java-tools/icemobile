@@ -23,7 +23,9 @@ public class PanelConfirmationBean {
     private int count = 0;
     private boolean execute = false;
     
-    public PanelConfirmationBean(){        
+    public PanelConfirmationBean(){
+        System.out.println("panelConfirmationBean ctor");
+        
     }
 
     public int getCount() {
@@ -35,6 +37,7 @@ public class PanelConfirmationBean {
     }
     
     public void setExecute(boolean val){
+        System.out.println("setExecute() " + val);
         if( val ){
             incrementCount();
         }

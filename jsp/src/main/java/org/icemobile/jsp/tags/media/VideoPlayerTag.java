@@ -60,5 +60,10 @@ public class VideoPlayerTag extends VideoPlayerBaseTag {
         renderer = new VideoPlayerCoreRenderer();
         renderer.encodeEnd(this, writer);
     }
-
+    public void release(){
+        this.srcAttribute=null;
+        this.url = null;
+        renderer=null;
+        writer = null;
+    }
 }

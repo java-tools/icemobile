@@ -43,6 +43,7 @@ if (!window.ice.mobile) {
         }
 
         namespace.camera = function(id, attr) {
+            alert('into camera');
             var result = window.ICEcamera.shootPhoto(id, attr);
             ice.addHidden(id, id, "" + result, 'file');
         }

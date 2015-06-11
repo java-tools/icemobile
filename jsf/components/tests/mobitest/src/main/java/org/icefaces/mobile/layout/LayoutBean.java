@@ -118,14 +118,6 @@ public class LayoutBean implements Serializable {
         }
     }
 
-    public String getInputString() {
-        return inputString;
-    }
-
-    public void setInputString(String inputString) {
-        this.inputString = inputString;
-    }
-
     public String getInputString2() {
         return inputString2;
     }
@@ -220,6 +212,14 @@ public class LayoutBean implements Serializable {
 
     public void setSelectedPane2(String selectedPane2) {
         this.selectedPane2 = selectedPane2;
+    }
+
+    public String getInputString() {
+        return inputString;
+    }
+
+    public void setInputString(String inputString) {
+        this.inputString = inputString;
     }
 
     public List getMenuList() {

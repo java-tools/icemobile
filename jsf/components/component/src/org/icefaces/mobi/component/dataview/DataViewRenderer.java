@@ -45,15 +45,12 @@ import java.util.logging.Logger;
  * Time: 10:47 AM
  */
 public class DataViewRenderer extends Renderer {
-    private static Logger logger = Logger.getLogger(DataViewRenderer.class.getName());
-
-    private DataView dataView;
-    private String dvId = null;
+    private static final Logger logger = Logger.getLogger(DataViewRenderer.class.getName());
 
     @Override
     public void encodeBegin(FacesContext context, UIComponent component) throws IOException {
-        dataView = (DataView) component;
-        dvId = dataView.getClientId();
+        DataView dataView = (DataView) component;
+        String dvId = dataView.getClientId();
         ResponseWriter writer = context.getResponseWriter();
 
         writer.startElement(HTML.DIV_ELEM, null);
@@ -70,24 +67,27 @@ public class DataViewRenderer extends Renderer {
     }
 
     @Override
-    public void encodeChildren(FacesContext context, UIComponent component) throws IOException {
+    public void encodeChildren(FacesContext context,
+                               UIComponent component) throws IOException {
         DataView dataView = (DataView) component;
         ResponseWriter writer = context.getResponseWriter();
 
-        encodeDetails(context, writer);
-        encodeColumns(context, writer);
+        encodeDetails(context, writer, dataView);
+        encodeColumns(context, writer, dataView);
     }
 
     @Override
     public void encodeEnd(FacesContext context, UIComponent component) throws IOException {
         ResponseWriter writer = context.getResponseWriter();
 
-        encodeScript(context, writer);
+        encodeScript(context, writer, (DataView)component);
 
         writer.endElement(HTML.DIV_ELEM);
     }
 
-    private void encodeScript(FacesContext context, ResponseWriter writer) throws IOException {
+    private void encodeScript(FacesContext context, ResponseWriter writer, DataView dataView) throws IOException {
+        String dvId = dataView.getClientId();
+
         writer.startElement(HTML.SPAN_ELEM, null);
         writer.writeAttribute(HTML.ID_ATTR, dvId + "_jswrp", null);
 
@@ -99,7 +99,7 @@ public class DataViewRenderer extends Renderer {
 
         String cfg = "{";
         cfg += "active:'" + dataView.getActivationMode() + "'";
-        if (reactive) cfg = encodeColumnPriorities(cfg);
+        if (reactive) cfg = encodeColumnPriorities(cfg, dataView);
         cfg += "}";
 
         String js =
@@ -113,7 +113,7 @@ public class DataViewRenderer extends Renderer {
         writer.endElement(HTML.SPAN_ELEM);
     }
 
-    private String encodeColumnPriorities(String cfg) {
+    private String encodeColumnPriorities(String cfg, DataView dataView) {
         cfg += ", colvispri:[";
         Integer[] priorities = dataView.getReactiveColumnPriorities();
         for (int i = 0; i < priorities.length; i++) {
@@ -125,7 +125,8 @@ public class DataViewRenderer extends Renderer {
     }
 
     private void encodeColumns(FacesContext context,
-                               ResponseWriter writer) throws IOException {
+                               ResponseWriter writer,
+                               DataView dataView) throws IOException {
         DataViewColumns columns = dataView.getColumns();
         String var = dataView.getVar();
 
@@ -140,7 +141,7 @@ public class DataViewRenderer extends Renderer {
             if (columnModel.hasHeaders())
                 encodeHeaders(writer, columnModel, dataModel, true);
 
-            encodeRows(context, writer, var, columnModel, dataModel);
+            encodeRows(context, writer, dataView, var, columnModel, dataModel);
 
             if (columnModel.hasFooters())
                 encodeFooters(writer, columnModel, dataModel, true);
@@ -246,9 +247,11 @@ public class DataViewRenderer extends Renderer {
 
     private void encodeRows(FacesContext context,
                             ResponseWriter writer,
+                            DataView dataView,
                             String var,
                             DataViewColumnsModel columnModel,
                             DataViewDataModel dataModel) throws IOException {
+        String dvId = dataView.getClientId();
         ELContext elContext = context.getELContext();
         Map<String, Object> requestMap = context.getExternalContext().getRequestMap();
         String clientId = dvId;
@@ -284,7 +287,7 @@ public class DataViewRenderer extends Renderer {
                 writer.writeAttribute(HTML.CLASS_ATTR, IDataView.DATAVIEW_ROW_ACTIVE_CLASS, null);
 
             if (ActivationMode.client.equals(dataView.getActivationMode()))
-                writer.writeAttribute("data-state", encodeRowDetailString(context, detailHolders), null);
+                writer.writeAttribute("data-state", encodeRowDetailString(context, dvId, detailHolders), null);
 
             for (IndexedIterator<DataViewColumnModel> columnModelIterator = columnModel.iterator(); columnModelIterator.hasNext();)
                 writeColumn(writer, elContext, columnModelIterator.next(), columnModelIterator.getIndex());
@@ -384,18 +387,18 @@ public class DataViewRenderer extends Renderer {
         return (df);
     }
 
-    private String encodeRowDetailString(FacesContext context, List<UIComponent> detailHolders) {
+    private String encodeRowDetailString(FacesContext context, String dvId, List<UIComponent> detailHolders) {
         StringBuilder detStr = new StringBuilder();
 
         for (Iterator<UIComponent> valueHolderIterator = detailHolders.iterator();
                 valueHolderIterator.hasNext();) {
-            appendUpdateString(detStr, context, valueHolderIterator);
+            appendUpdateString(dvId, detStr, context, valueHolderIterator);
         }
 
         return DOMUtils.escapeAnsi(detStr.toString());
     }
 
-    private void appendUpdateString(StringBuilder detStr, FacesContext context, Iterator<UIComponent> valueHolderIterator) {
+    private void appendUpdateString(String dvId, StringBuilder detStr, FacesContext context, Iterator<UIComponent> valueHolderIterator) {
         String cId = dvId + UINamingContainer.getSeparatorChar(context);
         ELContext elContext = context.getELContext();
         UIComponent vhComponent = valueHolderIterator.next();
@@ -436,24 +439,24 @@ public class DataViewRenderer extends Renderer {
         if (!first && valueHolderIterator.hasNext()) detStr.append("|");
     }
 
-    private static HashSet emptySet = new HashSet();
-    private static HashSet mobiInputTextProperties = new HashSet() {{
+    private static final HashSet emptySet = new HashSet();
+    private static final HashSet mobiInputTextProperties = new HashSet() {{
         add("value"); add("type"); add("placeholder"); add("readonly"); add("maxlength");
         add("size"); add("required"); add("results"); add("title"); add("min"); add("max");
         add("step"); add("disabled"); add("style"); add("styleClass");
     }};
-    private static HashSet uiCommandProperties = new HashSet() {{ add("value"); }};
-    private static HashSet uiInputProperties = new HashSet() {{ add("value"); }};
-    private static HashSet uiOutputProperties = new HashSet() {{ add("value"); }};
+    private static final HashSet uiCommandProperties = new HashSet() {{ add("value"); }};
+    private static final HashSet uiInputProperties = new HashSet() {{ add("value"); }};
+    private static final HashSet uiOutputProperties = new HashSet() {{ add("value"); }};
 
-    private static List<Class> htmlValueHolders = new ArrayList<Class>() {{
+    private static final List<Class> htmlValueHolders = new ArrayList<Class>() {{
         add(HtmlInputTextarea.class);
         add(HtmlOutputText.class);
         add(HtmlOutputLabel.class);
         add(HtmlCommandLink.class);
     }};
 
-    private static List<Class> attrValueHolders = new ArrayList<Class>() {{
+    private static final List<Class> attrValueHolders = new ArrayList<Class>() {{
         add(HtmlInputText.class);
         add(HtmlInputSecret.class);
         add(HtmlInputText.class);
@@ -507,7 +510,9 @@ public class DataViewRenderer extends Renderer {
     }
 
     private void encodeDetails(FacesContext context,
-                               ResponseWriter writer) throws IOException {
+                               ResponseWriter writer,
+                               DataView dataView) throws IOException {
+        String dvId = dataView.getClientId();
         DataViewDetails details = dataView.getDetails();
 
         // Init row context

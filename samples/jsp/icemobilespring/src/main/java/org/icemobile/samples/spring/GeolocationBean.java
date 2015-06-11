@@ -81,6 +81,7 @@ public class GeolocationBean {
     }
 
     public void setMaximumAge(int maximumAge) {
+        System.out.println("setMaximumAge()="+maximumAge);
         this.maximumAge = maximumAge;
     }
 

@@ -21,7 +21,7 @@
 
     <property name="icemobile.base.dir" location="../../.."/>
     <property name="samples.dist.dir" location="${icemobile.base.dir}/samples/dist"/>
-    
+
     <property name="compile.source" value="1.5"/>
     <property name="compile.target" value="1.5"/>
     <property name="compile.debug" value="true"/>
@@ -35,7 +35,24 @@
 
     <property name="build.dir" location="./build"/>
     <property name="classes.dir" location="${build.dir}/classes"/>
+    <property name="webxml.dir" location="${build.dir}/webxml"/>
     <property name="dist.dir" location="${build.dir}/dist"/>
+
+	<property file="${icemobile.server.config}" />
+
+    <property name="FACES_SERVLET" value="Faces Servlet"/>
+    <property name="WEBXML_PREAMBLE"
+        value="&lt;web-app xmlns=&quot;http://java.sun.com/xml/ns/javaee&quot;
+         xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://java.sun.com/xml/ns/javaee
+                      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd&quot;
+         version=&quot;3.0&quot; metadata-complete=&quot;false&quot;&gt;"/>
+    <property name="MULTIPART_CONFIG" value="&lt;multipart-config/&gt;"/>
+    <property name="EXTRA_CONTEXT_PARAMS" value=""/>
+    <property name="EXTRA_FILTERS" value=""/>
+    <property name="EXTRA_FILTER_MAPPINGS" value=""/>
+    <property name="EXTRA_SERVLET_MAPPINGS" value=""/>
+    <property name="EXTRA_SERVLETS" value=""/>
 
     <patternset id="pattern.all">
         <include name="*.jar"/>
@@ -76,14 +93,5 @@
         <mkdir dir="${build.dir}/classes"/>
         <mkdir dir="${build.dir}/dist"/>
     </target>
-<!--    <target name="check1Settings">
-        <echo message="application dir is &quot;${lib.application.dir}&quot;" />
-        <echo message="lib dir is &quot;${lib.icemobile.dir}&quot;" />
-        <echo message="base dir is &quot;${icemobile.base.dir}&quot;" />
-        <echo message="classes dir is &quot;${classes.dir}&quot;" />
-        <echo message="build dir is &quot;${build.dir}&quot;" />
-        <echo message=" jsp lib name &quot;${icemobile-jsp.lib.name}&quot;"/>
-        <echo message=" jsp spring lib name &quot;${icemobile-spring.lib.name}&quot;"/>
-   </target>  -->
     
 </project>

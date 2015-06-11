@@ -15,17 +15,18 @@
   ~ governing permissions and limitations under the License.
   -->
 
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    metadata-complete="false"
-    version="3.0"
-    xmlns="http://java.sun.com/xml/ns/javaee"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-                      http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" >
+@WEBXML_PREAMBLE@
 
     <context-param>
         <param-name>org.icemobile.projectstage</param-name>
         <param-value>production</param-value>
     </context-param>
+    
+@EXTRA_CONTEXT_PARAMS@
+    
+@EXTRA_FILTERS@
+
+@EXTRA_SERVLETS@
 
     <!-- Processes application requests -->
     <servlet>
@@ -51,6 +52,11 @@
         <servlet-name>app</servlet-name>
         <url-pattern>/</url-pattern>
     </servlet-mapping>
+
+@EXTRA_SERVLET_MAPPINGS@
+
+
+@EXTRA_FILTER_MAPPINGS@
 
     <!-- Disables Servlet Container welcome file handling. Needed for compatibility with Servlet 3.0 and Tomcat 7.0 -->
     <welcome-file-list>

@@ -119,5 +119,4 @@ public class CommandButtonMeta extends UICommandMeta {
     @Field
     private String name;
 
-
 }

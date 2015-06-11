@@ -14,10 +14,11 @@
   ~ governing permissions and limitations under the License.
   -->
 
+
 <project name="common-jsf" default="servlet-profile">
 		
 	<import file="common.xml"/>
-
+    
     <condition property="jsf.implementation" value="myfaces" else="mojarra">
         <isset property="myfaces"/>
     </condition>
@@ -27,6 +28,7 @@
     	<include name="${icefaces.lib.name}.jar" />
     	<include name="jstl-1.2.jar"/>
         <include name="mail.jar"/>
+        <include name="icefaces-ee-ext.jar"/>
     	<include name="${icefaces-mobi.lib.name}.jar" />
     </patternset>
 
@@ -69,12 +71,27 @@
                 <include name="**/*.java"/>
             </fileset>
         </copy>
+        <copy file="${web.dir}/WEB-INF/web.xml" todir="${webxml.dir}">
+          <filterset>
+            <filter token="FACES_SERVLET" value="${FACES_SERVLET}"/>
+            <filter token="WEBXML_PREAMBLE" value="${WEBXML_PREAMBLE}"/>
+            <filter token="MULTIPART_CONFIG" value="${MULTIPART_CONFIG}"/>
+            <filter token="EXTRA_CONTEXT_PARAMS" value="${EXTRA_CONTEXT_PARAMS}"/>
+            <filter token="EXTRA_FILTERS" value="${EXTRA_FILTERS}"/>
+            <filter token="EXTRA_FILTER_MAPPINGS"
+              value="${EXTRA_FILTER_MAPPINGS}"/>
+            <filter token="EXTRA_SERVLET_MAPPINGS"
+              value="${EXTRA_SERVLET_MAPPINGS}"/>
+            <filter token="EXTRA_SERVLETS" value="${EXTRA_SERVLETS}"/>
+          </filterset>
+        </copy>
     </target>
 
     <target name="war.basic" depends="compile">
-    	<war basedir="${web.dir}"
+    	<war duplicate="preserve" basedir="${web.dir}"
              destfile="${dist.dir}/${ant.project.name}.war"
-             webxml="${web.dir}/WEB-INF/web.xml">
+             webxml="${webxml.dir}/web.xml"
+             excludes="WEB-INF/web.xml">
 
             <lib dir="${lib.icemobile.dir}">
                 <patternset refid="pattern.distribute.jsf"/>
