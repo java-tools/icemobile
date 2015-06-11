@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -21,20 +21,23 @@
 @interface AudioController : UIViewController  {
 
     NativeInterface *nativeInterface;
-    UISegmentedControl *recordControl;
-    UISegmentedControl *submitControl;
+    BOOL isRecording;
+    UIButton *recordStopButton;
+    UIButton *cancelButton;
+    UIButton *useButton;
 
 }
 
 @property (retain) NativeInterface *nativeInterface;
-@property (nonatomic, retain) IBOutlet UISegmentedControl *recordControl;
-@property (nonatomic, retain) IBOutlet UISegmentedControl *submitControl;
+@property (nonatomic)  BOOL isRecording;
+@property (nonatomic, retain) IBOutlet UIButton *recordStopButton;
+@property (nonatomic, retain) IBOutlet UIButton *cancelButton;
+@property (nonatomic, retain) IBOutlet UIButton *useButton;
 
+- (IBAction) doRecordStop;
 - (IBAction) doRecord;
 - (IBAction) doStop;
 - (IBAction) doDone;
 - (IBAction) doCancel;
-- (IBAction) recordAction;
-- (IBAction) submitAction;
 
 @end

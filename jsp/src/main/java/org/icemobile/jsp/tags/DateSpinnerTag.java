@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,8 +16,15 @@
 
 package org.icemobile.jsp.tags;
 
+import static org.icemobile.util.HTML.CLASS_ATTR;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
+
+import org.icemobile.util.CSSUtils;
+import org.icemobile.util.ClientDescriptor;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.text.ParsePosition;
@@ -78,7 +85,8 @@ public class DateSpinnerTag extends SimpleTagSupport {
         if (tu == null) {
             tu = new TagUtil();
         }
-        if (useNative && tu.useNative(pageContext)) {
+        ClientDescriptor client = ClientDescriptor.getInstance((HttpServletRequest)pageContext.getRequest());
+        if (useNative && client.isHasNativeDatePicker()) {
             out.write(tu.INPUT_TAG);
             tu.writeAttribute(out, "type", "date");
             tu.writeAttribute(out, "id", id);
@@ -99,20 +107,19 @@ public class DateSpinnerTag extends SimpleTagSupport {
             if (readOnly) {
                 tu.writeAttribute(out, "readonly", "true");
             }
+            if( !tu.isValueBlank(style)){
+                tu.writeAttribute(out, "style", style);
+            }
+            if( !tu.isValueBlank(styleClass)){
+                tu.writeAttribute(out, "class", styleClass);
+            }
+            
             out.write(">" + tu.INPUT_TAG_END);
         } else {
             //            writeJavascriptFile(pageContext, JS_NAME, JS_MIN_NAME, JS_LIBRARY);
             encodeMarkup(pageContext, out, encodeValue(value));
             encodeScript(out);
         }
-        out.write(tu.A_TAG);
-        tu.writeAttribute(out, "id", id);
-
-        if (!tu.isValueBlank(name)) {
-            tu.writeAttribute(out, "name", name);
-        }
-        out.write(" >");
-        out.write(tu.A_TAG_END);
 
     }
 
@@ -255,7 +262,7 @@ public class DateSpinnerTag extends SimpleTagSupport {
         writer.write(tu.DIV_TAG);                          //button container for set or cancel
         tu.writeAttribute(writer, "class", "mobi-date-submit-container");
         writer.write(">" + tu.INPUT_TAG);
-        tu.writeAttribute(writer, "class", "mobi-button");
+        tu.writeAttribute(writer, "class", CSSUtils.STYLECLASS_BUTTON);
         tu.writeAttribute(writer, "type", "button");
         tu.writeAttribute(writer, "value", "Set");
         if (!isDisabled() && !isReadOnly()) {
@@ -264,7 +271,7 @@ public class DateSpinnerTag extends SimpleTagSupport {
         writer.write(">" + tu.INPUT_TAG_END);
 
         writer.write(tu.INPUT_TAG);
-        tu.writeAttribute(writer, "class", "mobi-button");
+        tu.writeAttribute(writer, "class", CSSUtils.STYLECLASS_BUTTON);
         tu.writeAttribute(writer, "type", "button");
         tu.writeAttribute(writer, "value", "Cancel");
         tu.writeAttribute(writer, CLICK_EVENT, "ice.mobi.datespinner.close('" + id + "');");
@@ -278,8 +285,9 @@ public class DateSpinnerTag extends SimpleTagSupport {
         //separate the value into yrInt, mthInt, dateInt for now just use contstants
         writer.write(tu.SPAN_TAG);
         tu.writeAttribute(writer, "id", id + "_script");
+        tu.writeAttribute(writer, CLASS_ATTR, "mobi-hidden");
         writer.write(">" + tu.SCRIPT_TAG);
-        tu.writeAttribute(writer, "text", "text/javascript");
+        tu.writeAttribute(writer, "type", "text/javascript");
         writer.write(">ice.mobi.datespinner.init('" + id + "'," + yearInt + ","
                          + monthInt + "," + dayInt + ",'" + pattern + "');");
         writer.write(tu.SCRIPT_TAG_END);

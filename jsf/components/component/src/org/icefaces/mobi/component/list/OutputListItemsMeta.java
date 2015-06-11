@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -18,7 +18,6 @@ package org.icefaces.mobi.component.list;
 
 import org.icefaces.ace.meta.annotation.Component;
 import org.icefaces.ace.meta.annotation.Property;
-import org.icefaces.ace.meta.baseMeta.UIDataMeta;
 import org.icefaces.ace.meta.baseMeta.UISeriesBaseMeta;
 import javax.faces.application.ResourceDependencies;
 import javax.faces.application.ResourceDependency;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,62 +16,18 @@
 
 package org.icefaces.mobi.component.video;
 
-import org.icefaces.mobi.utils.Attribute;
+import org.icefaces.mobi.utils.MobiJSFUtils;
+import org.icemobile.util.ClientDescriptor;
+import org.icemobile.component.IVideoPlayer;
 
 import java.util.logging.Logger;
 
 
-public class VideoPlayer extends VideoPlayerBase {
+public class VideoPlayer extends VideoPlayerBase implements IVideoPlayer{
     private static final Logger logger =
             Logger.getLogger(VideoPlayer.class.toString());
 
-    public static final String VIDEO_CLASS = "mobi-video";
-
-    // string pass through attributes for wrapping span
-    private Attribute[] spanPassThruAttributes = {
-            new Attribute("style", null)};
-
-    // number pass though attributes for video element
-    private Attribute[] videoPassThruAttributes = {
-            new Attribute("height", null),
-            new Attribute("width", null)};
-
-    private Attribute[] attributesNames = {
-            new Attribute("controls", null),
-            new Attribute("autoplay", null),
-            new Attribute("style", null),
-            new Attribute("loop", null),
-            new Attribute("tabindex", null),
-            new Attribute("poster", null),
-            new Attribute("height", null),
-            new Attribute("width", null),
-            new Attribute("url", null),
-            new Attribute("library", null),
-            new Attribute("preload", null)};
-
-    private Attribute[] booleanAttNames = {new Attribute("disabled", null)};
-
-    public Attribute[] getAttributesNames() {
-        return attributesNames;
-    }
-
-    public void setAttributesNames(Attribute[] attributesNames) {
-        this.attributesNames = attributesNames;
-    }
-
-    public Attribute[] getBooleanAttNames() {
-        return booleanAttNames;
-    }
-
-    public void setBooleanAttNames(Attribute[] booleanAttNames) {
-        this.booleanAttNames = booleanAttNames;
-    }
-
-    public Attribute[] getVideoPassThruAttributes() {
-        return videoPassThruAttributes;
-    }
-
-    public Attribute[] getSpanPassThruAttributes() {
-        return spanPassThruAttributes;
+    public ClientDescriptor getClient() {
+         return MobiJSFUtils.getClientDescriptor();
     }
 }

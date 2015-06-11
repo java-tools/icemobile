@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -17,25 +17,24 @@
 package org.icefaces.mobi.component.button;
 
 
-public class CommandButton extends CommandButtonBase {
+import org.icefaces.mobi.utils.MobiJSFUtils;
+import org.icemobile.component.IButton;
+import org.icemobile.util.ClientDescriptor;
 
-    // Default button types.
-    public static final String BUTTON_TYPE_UNIMPORTANT = "unimportant";
-    public static final String BUTTON_TYPE_IMPORTANT = "important";
-    public static final String BUTTON_TYPE_ATTENTION = "attention";
-    public static final String BUTTON_TYPE_BACK = "back";
 
-    // button styles.
-    public static final String BASE_STYLE_CLASS = "mobi-button";
-    public static final String DISABLED_STYLE_CLASS = "mobi-button-dis";
-    public static final String UNIMPORTANT_STYLE_CLASS = " mobi-button-unimportant";
-    public static final String IMPORTANT_STYLE_CLASS = " mobi-button-important";
-    public static final String BACK_STYLE_CLASS = " mobi-button-back";
-    public static final String ATTENTION_STYLE_CLASS = " mobi-button-attention";
-    public static final String SELECTED_STYLE_CLASS = " mobi-button-selected";
+public class CommandButton extends CommandButtonBase implements IButton{
 
-    public String getDefaultEventName(){
-        return "click";
+    private boolean parentDisabled = false;
+    public ClientDescriptor getClient() {
+         return MobiJSFUtils.getClientDescriptor();
+    }
+
+    public boolean isParentDisabled(){
+        return false;// not handled for JSF in javascript
+    }
+
+    public void setParentDisabled(boolean disabled){
+        this.parentDisabled = disabled;
     }
 
 }

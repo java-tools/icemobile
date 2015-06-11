@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,15 +16,19 @@
 
 package org.icemobile.jsp.tags;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
+
+import org.icemobile.util.ClientDescriptor;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Logger;
 
 public class InputTextTag extends SimpleTagSupport {
 
-    public static final String INPUT_TEXT_CLASS = "mobi-input-text";
+    public static final String INPUT_TEXT_CLASS = "mobi-input-text ui-input-text";
     private static Logger LOG = Logger.getLogger(InputTextTag.class.getName());
 
     private String id;
@@ -45,11 +49,21 @@ public class InputTextTag extends SimpleTagSupport {
     private String autoCapitalize = "off";
     private String autoComplete = "off";
     private String placeholder;
+    private String step;
+    private String label;
 
     public void doTag() throws IOException {
 
         PageContext pageContext = (PageContext) getJspContext();
         Writer out = pageContext.getOut();
+        
+        if( label != null ){
+            out.write("<label ");
+            if( id != null ){
+                out.write("id='" + id + "_lbl' for='" + id + "' ");
+            }
+            out.write("class='ui-input-text'>" + label + "</label>");
+        }
 
         String element = "input";
         String type = getType();
@@ -82,6 +96,9 @@ public class InputTextTag extends SimpleTagSupport {
         out.write(" autocorrect=\"" + autoCorrect + "\"");
         out.write(" autocapitalize=\"" + autoCapitalize + "\"");
         out.write(" placeholder=\"" + placeholder + "\"");
+        if (null != step)  {
+            out.write(" step=\"" + step + "\"");
+        }
 	// Disabled and readonly;
         if (isDisabled()) {
             out.write(" disabled=\"true\"");
@@ -92,14 +109,19 @@ public class InputTextTag extends SimpleTagSupport {
 
         // apply textarea passthough attributes.
         if (rows > 0) {
-            out.write(" rows=\"" + this.type + "\"");
+            out.write(" rows=\"" + this.rows + "\"");
         }
         if (cols > 0) {
-            out.write(" cols=\"" + this.type + "\"");
+            out.write(" cols=\"" + this.cols + "\"");
         }
         String value = getValue();
         if (!isTextArea) {
-            out.write(" type=\"" + this.type + "\"");
+            ClientDescriptor client = ClientDescriptor.getInstance((HttpServletRequest)pageContext.getRequest());
+            String typeVal = this.type;
+            if( "date".equals(typeVal) && client.isAndroidOS() && client.isICEmobileContainer()){
+                typeVal = "text"; //Android container borks type="date"
+            }
+            out.write(" type=\"" + typeVal + "\"");
             if (value != null) {
                 out.write(" value=\"" + value + "\"");
             }
@@ -177,6 +199,14 @@ public class InputTextTag extends SimpleTagSupport {
         this.placeholder = placeholder;
     }
 
+    public String getStep() {
+        return step;
+    }
+
+    public void setStep(String step) {
+        this.step = step;
+    }
+
     public String getAutoCapitalize() {
         return autoCapitalize;
     }
@@ -222,5 +252,13 @@ public class InputTextTag extends SimpleTagSupport {
 
     public void setReadOnly(boolean readonly) {
         this.readOnly = readonly;
+    }
+    
+    public void setLabel(String label){ 
+        this.label = label;
+    }
+    
+    public String getLabel(){
+        return label;
     }
 }

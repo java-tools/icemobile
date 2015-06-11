@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+  ~ Copyright 2004-2013 ICEsoft Technologies Canada Corp.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the
@@ -32,18 +32,22 @@
               value="${product}-${version.primary}.${version.secondary}.${version.tertiary}${release.type.suffix}"/>
 
     <property name="bin.bundle.name" value="${bundle.name}-bin"/>
-    <property name="bin.bundle.prefix" value="${bin.bundle.name}/icemobile"/>
+    <property name="bin.bundle.prefix" value="${bin.bundle.name}/${bundle.dir.name}"/>
     <property name="bin.bundle.file"
               location="${dist.dir}/${bin.bundle.name}.zip"/>
 
     <property name="src.bundle.name" value="${bundle.name}-src"/>
-    <property name="src.bundle.prefix" value="${src.bundle.name}/icemobile"/>
+    <property name="src.bundle.prefix" value="${src.bundle.name}/${bundle.dir.name}"/>
     <property name="src.bundle.file"
               location="${dist.dir}/${src.bundle.name}.zip"/>
 
     <property name="compile.source" value="1.5"/>
     <property name="compile.target" value="1.5"/>
     <property name="compile.debug" value="true"/>
+
+    <condition property="jsf.implementation" value="myfaces" else="mojarra">
+        <isset property="myfaces"/>
+    </condition>
 
     <propertyset id="product.info">
         <propertyref name="company"/>
@@ -61,7 +65,9 @@
     </presetdef>
 
     <presetdef name="subant" uri="urn:ICEsoft">
-        <subant inheritall="false" failonerror="true" verbose="true"/>
+        <subant inheritall="false" failonerror="true" verbose="true">
+            <property name="jsf.implementation" value="${jsf.implementation}"/>
+        </subant>
     </presetdef>
 
     <presetdef name="zip" uri="urn:ICEsoft">
@@ -70,7 +76,13 @@
 
     <target name="build.all" description="Build ICEmobile project and samples.">
         <ice:subant target="all">
+            <fileset dir="./core" includes="build.xml" />
+        </ice:subant>
+        <ice:subant target="all">
             <fileset dir="./jsp" includes="build.xml" />
+        </ice:subant>
+    	<ice:subant target="all">
+            <fileset dir="./spring" includes="build.xml" />
         </ice:subant>
         <ice:subant target="all">
             <fileset dir="./jsf" includes="build.xml" />
@@ -79,10 +91,40 @@
             <fileset dir="./samples" includes="build.xml" />
         </ice:subant>
     </target>
+	
+	<target name="build.libs" description="Build ICEmobile project libraries.">
+	        <ice:subant target="all">
+	            <fileset dir="./core" includes="build.xml" />
+	        </ice:subant>
+	        <ice:subant target="all">
+	            <fileset dir="./jsp" includes="build.xml" />
+	        </ice:subant>
+	        <ice:subant target="all">
+	            <fileset dir="./spring" includes="build.xml" />
+	        </ice:subant>
+	        <ice:subant target="all">
+	            <fileset dir="./jsf" includes="build.xml" />
+	        </ice:subant>
+	    </target>
 
     <target name="build.bin" >
         <build.bin.bundle />
     </target>
+
+   
+    <target name="build.jsp" description="Build JSP library.">
+        <ice:subant target="all">
+            <filelist dir="." files="core, jsp"/>
+        </ice:subant>
+    </target>
+
+    <target name="build.jsf" description="Build JSF library.">
+        <ice:subant target="all">
+            <filelist dir="." files="core, jsf"/>
+        </ice:subant>
+    </target>
+    
+
 
     <target name="zip.src">
         <zip.src />
@@ -97,7 +139,7 @@
 
     <target name="build.common">
         <ice:subant>
-            <filelist dir="." files="jsf, samples"/>
+            <filelist dir="." files="core, jsf, samples"/>
         </ice:subant>
     </target>
 
@@ -114,14 +156,16 @@
         <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
         <delete dir="${docs.jsf.dir}"/>
+    	<delete dir="${docs.jsp.dir}"/>
+    	<delete dir=".sass-cache"/>
         <ice:subant target="clean">
-            <filelist dir="." files="jsf, jsp, samples"/>
+            <filelist dir="." files="core, jsf, jsp, spring, samples, resources"/>
         </ice:subant>
     </target>
 
     <target name="clean.bin">
         <ice:subant target="clean">
-            <filelist dir="." files="jsf, jsp, samples"/>
+            <filelist dir="." files="core, jsf, jsp, spring, samples"/>
         </ice:subant>
     </target>
 
@@ -144,6 +188,7 @@
                     <exclude name="client/"/>
                     <exclude name="jsf/"/>
                     <exclude name="jsp/"/>
+                	<exclude name="spring/"/>
                     <exclude name="lib/generator/"/>
                     <!-- trim component build script for binary bundle -->
                     <exclude name="build.xml" />
@@ -177,6 +222,10 @@
 
         <sequential>
 
+            <ice:subant target="all">
+                <fileset dir="./core" includes="build.xml" />
+                <propertyset refid="product.info"/>
+            </ice:subant>
             <ice:subant target="build">
                 <fileset dir="./jsf" includes="build.xml" />
                 <propertyset refid="product.info"/>
@@ -185,6 +234,9 @@
                 <fileset dir="./jsp" includes="build.xml" />
                 <propertyset refid="product.info"/>
             </ice:subant>
+        	<ice:subant target="all">
+	            <fileset dir="./spring" includes="build.xml" />
+	        </ice:subant>
             <ice:subant target="all">
                 <fileset dir="./samples" includes="build.xml" />
                 <propertyset refid="product.info"/>
@@ -195,6 +247,7 @@
             <!-- Create the JSF component JavaDocs and TLD documentation -->
             <subant target="docs" failonerror="true" verbose="true">
                 <fileset dir="./jsf" includes="build.xml"/>
+                <property name="jsf.implementation" value="${jsf.implementation}"/>
             </subant> 
             <!-- copy the jsf -->
             <mkdir dir="${docs.jsf.dir}/tld/"/>

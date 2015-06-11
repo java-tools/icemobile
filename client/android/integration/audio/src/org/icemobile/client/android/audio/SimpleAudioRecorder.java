@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -119,9 +119,9 @@ public class SimpleAudioRecorder extends Activity  {
             public void onClick(View v) {
                 onRecord(mStartRecording);
                 if (mStartRecording) {
-                    setText("Stop recording");
+                    setText("Stop");
                 } else {
-                    setText("Start recording");
+                    setText("Record");
                 }
                 mStartRecording = !mStartRecording;
             }
@@ -129,7 +129,7 @@ public class SimpleAudioRecorder extends Activity  {
 
         public RecordButton(Context ctx) {
             super(ctx);
-            setText("Start recording");
+            setText("Record");
             setOnClickListener(clicker);
         }
     }
@@ -141,9 +141,9 @@ public class SimpleAudioRecorder extends Activity  {
             public void onClick(View v) {
                 onPlay(mStartPlaying);
                 if (mStartPlaying) {
-                    setText("Stop playing");
+                    setText("Stop");
                 } else {
-                    setText("Start playing");
+                    setText("Play");
                 }
                 mStartPlaying = !mStartPlaying;
             }
@@ -151,7 +151,7 @@ public class SimpleAudioRecorder extends Activity  {
 
         public PlayButton(Context ctx) {
             super(ctx);
-            setText("Start playing");
+            setText("Play");
             setOnClickListener(clicker);
         }
     }

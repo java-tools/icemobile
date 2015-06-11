@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -15,6 +15,7 @@
  */
 package org.icemobile.util;
 
+import java.io.Serializable;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
@@ -27,7 +28,7 @@ import javax.servlet.http.HttpSession;
  * Will detect the OS and 
  *
  */
-public class ClientDescriptor {
+public class ClientDescriptor implements Serializable{
     
     private final static String SESSION_KEY = "mobiClient";
     private final static String HEADER_ACCEPT = "Accept";
@@ -129,9 +130,13 @@ public class ClientDescriptor {
     public boolean isAndroidOS() {
         return os == OS.ANDROID;
     }
-
+    
     public boolean isBlackBerryOS() {
         return os == OS.BLACKBERRY;
+    }
+    
+    public boolean isBlackBerry10OS(){
+        return _userAgentInfo.isBlackberry10OS();
     }
 
     public boolean isIEBrowser() {
@@ -140,6 +145,14 @@ public class ClientDescriptor {
 
     public boolean isIE8orLessBrowser() {
         return _userAgentInfo.isIE8orLess();
+    }
+    
+    public boolean isIE9Browser(){
+        return _userAgentInfo.isIE9();
+    }
+    
+    public boolean isIE10Browser(){
+        return _userAgentInfo.isIE10();
     }
     
     public boolean isIOS() {
@@ -169,6 +182,10 @@ public class ClientDescriptor {
             }
         }
         return icemobileContainer;
+    }
+    
+    public boolean isEnhancedBrowser(){
+        return isICEmobileContainer() || isSXRegistered();
     }
     
     public boolean isDesktopBrowser(){
@@ -251,5 +268,37 @@ public class ClientDescriptor {
             }
         }
     }
+    
+    public boolean isChromeBrowser(){
+        return _userAgentInfo.isChrome();
+    }
+    
+    public boolean isHasNativeDatePicker() {
+        return isIOS5() || isIOS6() || isBlackBerryOS() || isChromeBrowser() || _userAgentInfo.isFirefoxAndroid();
+    }
+	
+	public boolean isAndroidBrowser(){
+        return _userAgentInfo.isAndroidBrowserOrWebView() && !isEnhancedBrowser();
+    }
+    
+    public boolean isAndroidBrowserOrWebView(){
+        return _userAgentInfo.isAndroidBrowserOrWebView();
+    }
+    
+    public boolean isAndroid2OS(){
+        return _userAgentInfo.isAndroid2();
+    }
+    
+    /*
+     * Fixed position is problematic on Android 2 (non-Firefox) and all Android
+     * WebViews on tablets, as well as BlackBerry
+     */
+    public boolean isSupportsFixedPosition(){
+        return !(isTabletBrowser() && isAndroidBrowserOrWebView())
+               && !(isHandheldBrowser() && isAndroid2OS() && !_userAgentInfo.isFirefoxAndroid() ) //Handheld, Android2 (Firefox works well, no Chrome available)
+               && !_userAgentInfo.isBlackberry6OS() //BB6 & 7 do not support fixed well
+               && !(_userAgentInfo.isBlackberry10OS() && isEnhancedBrowser()); //BB10 container uses Android 2 browser
+    }
+
 
 }

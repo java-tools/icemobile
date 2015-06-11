@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+  ~ Copyright 2004-2013 ICEsoft Technologies Canada Corp.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the
@@ -24,6 +24,15 @@
     <tlib-version>2.0.0</tlib-version>
     <short-name>icemobile</short-name>
     <uri>http://www.icemobile.org/tags</uri>
+    
+    <listener>
+        <listener-class>org.icemobile.jsp.servlet.ICEmobileServletContextListener</listener-class>
+    </listener>
+    
+     <listener>
+        <listener-class>org.icemobile.jsp.servlet.MobiClientListener</listener-class>
+    </listener>
+    
 
     <tag>
         <description>Show augmented reality video overlay.</description>
@@ -396,39 +405,6 @@
     </tag>
 
     <tag>
-        <description>Content Pane Tag.</description>
-        <display-name>ICEmobile ContentPane</display-name>
-        <name>contentPane</name>
-        <tag-class>org.icemobile.jsp.tags.ContentPaneTag</tag-class>
-        <body-content>JSP</body-content>
-        <attribute>
-            <description>Pagewide unique identifier.</description>
-            <name>id</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>A textual title appearing above the content.
-            </description>
-            <name>title</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>Inline style definition.</description>
-            <name>style</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>User defined CSS class.</description>
-            <name>styleClass</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
-
-    <tag>
         <description>Geolocation Tag.</description>
         <display-name>ICEmobile Geolocation Tag</display-name>
         <name>geolocation</name>
@@ -553,6 +529,13 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
         <attribute>
+            <description>A step value for number values.
+            </description>
+            <name>step</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
             <description>A placeholder string appearing in the textfield.
             </description>
             <name>placeholder</name>
@@ -595,6 +578,12 @@
         <attribute>
             <description>Column count for input text area.</description>
             <name>cols</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>The label to render for the input field.</description>
+            <name>label</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
@@ -787,15 +776,83 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
         <attribute>
-            <description>Standard button type - button, submit, img, etc
+            <description>Standard button type - button, submit
             </description>
             <name>type</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
         <attribute>
+            <description>Id of panelConfirmation to be used. If this is used then button must have
+                an id.
+            </description>
+            <name>panelConfirmation</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Id of submitNotification to be used. If this is used then button must have
+                an id.
+            </description>
+            <name>submitNotification</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
             <description>Sets the button style to selected.</description>
             <name>selected</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <description>Mobile Styled Button Group</description>
+        <display-name>commandButtonGroup</display-name>
+        <name>commandButtonGroup</name>
+        <tag-class>org.icemobile.jsp.tags.input.CommandButtonGroupTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>Pagewide unique identifier. The commandButtons in the group must have unique id on the page</description>
+            <name>id</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Name of submitted value should correspond to selectedId</description>
+            <name>name</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Inline style definition.</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>User defined CSS class.</description>
+            <name>styleClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Orientation of button group. May be horizontal or vertical.
+                default is horizontal.
+            </description>
+            <name>orientation</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>The id of the selected-styled button in the group.
+            </description>
+            <name>selectedId</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Determines if control is disabled.</description>
+            <name>disabled</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
@@ -830,6 +887,26 @@
              <rtexprvalue>true</rtexprvalue>
          </attribute>
          <attribute>
+             <description>Text that denotes use of a button that will page forward
+                 through the carousel to the Next item.</description>
+             <name>nextLabel</name>
+             <required>false</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute>
+         <attribute>
+             <description>Text that denotes use of a button that will page backward
+                 through the carousel to the Previous item.</description>
+             <name>previousLabel</name>
+             <required>false</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute>
+         <attribute>
+            <description>Disables or enables the carousel.</description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+         </attribute>
+         <attribute>
             <description>Index of selected tab (0 to collection.size-1)
             </description>
             <name>selectedItem</name>
@@ -854,7 +931,7 @@
         <description>Parent Fieldset Group Tag.</description>
         <display-name>fieldsetGroup</display-name>
         <name>fieldsetGroup</name>
-        <tag-class>org.icemobile.jsp.tags.FieldSetGroupTag</tag-class>
+        <tag-class>org.icemobile.jsp.tags.layout.FieldSetGroupTag</tag-class>
         <body-content>JSP</body-content>
         <attribute>
             <description>Pagewide unique identifier.</description>
@@ -887,7 +964,7 @@
         <description>Fieldset Row Tag.</description>
         <display-name>FieldsetRow</display-name>
         <name>fieldsetRow</name>
-        <tag-class>org.icemobile.jsp.tags.FieldSetRowTag</tag-class>
+        <tag-class>org.icemobile.jsp.tags.layout.FieldSetRowTag</tag-class>
         <body-content>JSP</body-content>
         <attribute>
             <description>Pagewide unique identifier.</description>
@@ -914,46 +991,6 @@
             <name>group</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
-        </attribute>
-    </tag>
-
-    <tag>
-        <description>ICEmobile TabSet.</description>
-        <display-name>tabSet</display-name>
-        <name>tabSet</name>
-        <tag-class>org.icemobile.jsp.tags.TabSetTag</tag-class>
-        <body-content>JSP</body-content>
-        <attribute>
-            <description>Pagewide unique identifier.</description>
-            <name>id</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>User defined CSS class.</description>
-            <name>styleClass</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>Inline style definition.</description>
-            <name>style</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>Index of selected tab (0 - #tabs-1)</description>
-            <name>selectedTab</name>
-            <required>true</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>When set to true (default),tabs are evenly spread out to 100% .
-            </description>
-            <name>autoWidth</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-            <type>boolean</type>
         </attribute>
     </tag>
 
@@ -1046,34 +1083,6 @@
              <rtexprvalue>true</rtexprvalue>
          </attribute>
      </tag>
-
-    <tag>
-        <description>A tag identifying the header portion of the Tabset
-        </description>
-        <display-name>Header section</display-name>
-        <name>headers</name>
-        <tag-class>org.icemobile.jsp.tags.HeadersTag</tag-class>
-        <body-content>JSP</body-content>
-    </tag>
-
-    <tag>
-        <description>An individual tabset header.</description>
-        <display-name>Header</display-name>
-        <name>header</name>
-        <tag-class>org.icemobile.jsp.tags.HeaderTag</tag-class>
-        <body-content>JSP</body-content>
-    </tag>
-
-    <tag>
-        <description>A delimeter tag for child contentPane tags shown in either
-            a Tabset or Accordion
-            tag
-        </description>
-        <display-name>Content Section</display-name>
-        <name>content</name>
-        <tag-class>org.icemobile.jsp.tags.ContentTag</tag-class>
-        <body-content>JSP</body-content>
-    </tag>
 
     <tag>
         <description>Layout Tag useful for presenting a list of content items
@@ -1328,6 +1337,12 @@
         <name>pagePanelHeader</name>
         <tag-class>org.icemobile.jsp.tags.PagePanelHeaderTag</tag-class>
         <body-content>JSP</body-content>
+        <attribute>
+            <description>jQuery Mobile ThemeRoller Swatch (a-e)</description>
+            <name>swatch</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
     <tag>
         <description>Page Panel Body.</description>
@@ -1356,12 +1371,24 @@
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
+        <attribute>
+            <description>jQuery Mobile ThemeRoller Swatch (a-e)</description>
+            <name>swatch</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
     <tag>
         <description>Page Panel Footer.</description>
         <name>pagePanelFooter</name>
         <tag-class>org.icemobile.jsp.tags.PagePanelFooterTag</tag-class>
         <body-content>JSP</body-content>
+        <attribute>
+            <description>jQuery Mobile ThemeRoller Swatch (a-e)</description>
+            <name>swatch</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
     </tag>
     <tag>
         <description>Popup panel of content on device.</description>
@@ -1617,54 +1644,6 @@
         <body-content>JSP</body-content>
     </tag>
     <tag>
-        <description>SplitPane must be used with 2 children that are
-            fragment.  The first will represent the left and the
-            second the right side, as only vertical split is currently
-            supported.  The user may determine the width of the first or
-            left column with an integer % value with the remainder
-            being assigned to the right column or inner div. both
-            inner children will be scrollable by default unless
-            scrollable attribute is set to false.
-        </description>
-        <name>splitPane</name>
-        <tag-class>org.icemobile.jsp.tags.layout.SplitPaneTag</tag-class>
-        <body-content>JSP</body-content>
-        <attribute>
-            <description>Pagewide unique identifier.</description>
-            <name>id</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-       <attribute>
-            <description>Sets the class attribute.</description>
-            <name>styleClass</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>Sets the style attribute.</description>
-            <name>style</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-       <attribute>
-            <description>determines if both splitPaneInner children
-                 are scrollable.  default is true.
-            </description>
-            <name>scrollable</name>
-            <required>false</required>
-            <rtexprvalue>true</rtexprvalue>
-        </attribute>
-        <attribute>
-            <description>The integer percent value width of the first or
-                  left div in the split pane.  Default is 30.</description>
-            <name>columnDivider</name>
-            <required>no</required>
-            <rtexprvalue>true</rtexprvalue>
-            <type>int</type>
-        </attribute>
-    </tag>
-    <tag>
       <description>Fragment is the child of the splitPane
           tag (maybe others too?).  This component just defines
           a fragment of jsp markup whose parent will determine
@@ -1680,6 +1659,361 @@
             </description>
             <name>name</name>
             <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <description>ICEmobile TabSet buffered version</description>
+        <display-name>tabSet</display-name>
+        <name>tabSet</name>
+        <tag-class>org.icemobile.jsp.tags.layout.TabSetTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>Pagewide unique identifier.</description>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>User defined CSS class.</description>
+            <name>styleClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Inline style definition.</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+         <attribute>
+            <description>Style attribute for tabs div</description>
+            <name>tabsStyle</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Style attribute for tab contents div</description>
+            <name>contentStyle</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>String name of selected Panel</description>
+            <name>selectedId</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+         <attribute>
+            <description>Orientation of tabSet</description>
+            <name>orientation</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>When set to true (default),tabs are evenly spread out to 100% .
+            </description>
+            <name>autoWidth</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>When disabled is true, tab controls are not able to change tabPanes .
+            </description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>When true, tab controls are rendered at top most available position in page
+                if orientation is top and at bottom most available position if orientation is bottom.
+                When false, the tab controls are placed at the top of the div for tabSetControl.
+            </description>
+            <name>fixedPosition</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>If height attribute is not used, this attribute may be used to calculate
+                the largest height of all tabPanes.
+            </description>
+            <name>autoHeight</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>Height is optional and must be valid css height for contents div</description>
+            <name>height</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+       <attribute>
+            <description> PagePanel is present with footer facet following this component
+            </description>
+            <name>parentFooter</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+       </attribute>
+       <attribute>
+            <description> PagePanel is present with header facet above this component.  This component
+                will attempt to find the PagePanelTag but if other non tag divs are present it may have
+                difficulty in which case the developer will have to use this attribute.
+            </description>
+            <name>parentHeader</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+       </attribute>
+    </tag>
+    <tag>
+         <description>Tab Pane Tag.</description>
+         <display-name>ICEmobile TabPane</display-name>
+         <name>tabPane</name>
+         <tag-class>org.icemobile.jsp.tags.layout.TabPaneTag</tag-class>
+         <body-content>JSP</body-content>
+         <attribute>
+             <description>Pagewide unique identifier.</description>
+             <name>id</name>
+             <required>true</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute>
+         <attribute>
+             <description>A textual title appearing above the content
+             </description>
+             <name>title</name>
+             <required>false</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute>
+  <!--       <attribute>
+             <description>Inline style definition.</description>
+             <name>style</name>
+             <required>false</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute>
+         <attribute>
+             <description>User defined CSS class.</description>
+             <name>styleClass</name>
+             <required>false</required>
+             <rtexprvalue>true</rtexprvalue>
+         </attribute> -->
+    </tag>
+    <tag>
+        <description>Panel Confirmation for commandButton and menuButton</description>
+        <name>panelConfirmation</name>
+        <tag-class>org.icemobile.jsp.tags.input.PanelConfirmationTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>Pagewide unique identifier.</description>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Inline style definition.</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>User defined CSS class.</description>
+            <name>styleClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <!-- Tag provide a close button, and if so, what label -->
+        <attribute>
+            <description>Title of the confirmation dialogue. Default will be Confirm</description>
+            <name>title</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Message for the body of the confirmation dialogue.</description>
+            <name>message</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Value label for the accept button if type includes accept feature.</description>
+            <name>acceptLabel</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Value label for the cancel button if type includes cancel feature.</description>
+            <name>cancelLabel</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Type of panelConfirmation dialogue. May be acceptOnly, cancelOnly or both
+               Default is both.
+            </description>
+            <name>type</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <description>SubmitNotification for commandButton and menuButton</description>
+        <name>submitNotification</name>
+        <tag-class>org.icemobile.jsp.tags.input.SubmitNotificationTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>Pagewide unique identifier.</description>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Inline style definition.</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>User defined CSS class.</description>
+            <name>styleClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>When disabled is true, no submitNotification panel appears.
+            </description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+    </tag>
+    <tag>
+        <description>Menu Button allows users to select a value from the list and then resets
+            itself after every use so that same value can be selected again the next time.
+        </description>
+        <name>menuButton</name>
+        <tag-class>org.icemobile.jsp.tags.input.MenuButtonTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>Pagewide unique identifier.</description>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Name attribute is required for submit purposes.</description>
+            <name>name</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Menu Button Label.</description>
+            <name>buttonLabel</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Select Label. Non is displayed if not used.</description>
+            <name>selectTitle</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Inline style definition.</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>User defined CSS class.</description>
+            <name>styleClass</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>String value of selected menuButtonItem.</description>
+            <name>selectedValue</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>When disabled is true, no submitNotification panel appears.
+            </description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+    </tag>
+    <tag>
+        <description>Menu Button Item Group. Can order menu button items by group and disable</description>
+        <name>menuButtonGroup</name>
+        <tag-class>org.icemobile.jsp.tags.input.MenuButtonItemGroupTag</tag-class>
+        <body-content>JSP</body-content>
+        <attribute>
+            <description>Label of Group heading.</description>
+            <name>label</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>ability to disabled group of menuButton items.</description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>Style of menu Button item group</description>
+            <name>style</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <description>Item that can be selected from menu button. Can order menu button items by group and disable</description>
+        <name>menuButtonItem</name>
+        <tag-class>org.icemobile.jsp.tags.input.MenuButtonItemTag</tag-class>
+        <body-content>empty</body-content>
+        <attribute>
+            <description>Pagewide unique identifier.</description>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Label for menu item.</description>
+            <name>label</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>Value of Menu Item.</description>
+            <name>value</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>ability to disabled group of menuButton items.</description>
+            <name>disabled</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+            <type>boolean</type>
+        </attribute>
+        <attribute>
+            <description>id of panelConfirmation tag on same form for this item.</description>
+            <name>panelConfirmation</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <description>id of submitNotification tag on same form for this item.</description>
+            <name>submitNotification</name>
+            <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>
     </tag>

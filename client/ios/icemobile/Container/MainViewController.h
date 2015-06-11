@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
     ZXingDelegate,UINavigationControllerDelegate,UIActionSheetDelegate> {
 
     UIWebView *webView;
+    UIProgressView *uploadProgress;
     NSURLRequest *currentRequest;
     NSURLResponse *currentResponse;
     NSMutableData *receivedData;
@@ -42,6 +43,7 @@
 
 @property (nonatomic, retain) IBOutlet UIWebView *webView;
 @property (nonatomic, retain) IBOutlet UIButton *prefsButton;
+@property (nonatomic, retain) IBOutlet UIProgressView *uploadProgress;
 @property (retain) NSURLRequest *currentRequest;
 @property (retain) NSURLResponse *currentResponse;
 @property (retain) NSMutableData *receivedData;

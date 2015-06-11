@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -138,6 +138,7 @@ NSLog(@"Hitch just upload what would have been scripted %@", script);
 }
 
 - (void) doCancel  {
+NSLog(@"doCancel reloadCurrentURL %d", self.launchedFromApp);
     if (!self.launchedFromApp)  {
         [self reloadCurrentURL];
     }
@@ -169,8 +170,13 @@ NSLog(@"hideControls");
     LogDebug(@"Native progress display %d", percent);
 }
 
+- (void) setProgressLabel:(NSString*)labelText  {
+    uploadLabel.text = labelText;
+}
+
 - (void) handleResponse:(NSString *)responseString  {
     LogDebug(@"handleResponse received %@", responseString);
+NSLog(@"handleResponse reloadCurrentURL");
     [self reloadCurrentURL];
 }
 
@@ -210,6 +216,13 @@ NSLog(@"hideControls");
 
 - (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
     if ([@"ICEmobile-SX License" isEqualToString: alertView.title])  {
+        return;
+    }
+
+    if ([@"Welcome" isEqualToString: alertView.title])  {
+        if (buttonIndex == 0)  {
+            [self doGoBack];
+        }
         return;
     }
 
@@ -272,6 +285,13 @@ NSLog(@"hideControls");
                     URLWithString:@"http://mobileshowcase.icemobile.org"]];
 }
 
+- (IBAction) doGoBack  {
+    NSLog(@"ViewController doGoBack");
+    [[UIApplication sharedApplication] 
+            openURL:[NSURL 
+                    URLWithString:@"http://www.icesoft.org/java/initicemobilesx.html"]];
+}
+
 - (IBAction) chooseAction  {
     LogDebug(@"ViewController chooseAction %d", actionSelector.selectedSegmentIndex);
     if (-1 == actionSelector.selectedSegmentIndex)  {
@@ -327,6 +347,8 @@ NSLog(@"hideControls");
             @"QR Code Scan", @"scan", 
             @"Augmented Reality View", @"aug", 
             @"Address Book", @"fetchContacts", 
+            @"Send SMS", @"sms", 
+            @"Location Upload", @"geospy", 
             nil];
     self.confirmMessages = [NSDictionary dictionaryWithObjectsAndKeys:
             @"Register with server ", @"register", 
@@ -336,6 +358,8 @@ NSLog(@"hideControls");
             @"Send QR Code to ", @"scan", 
             @"Send augmented reality location to ", @"aug", 
             @"Send contact to ", @"fetchContacts", 
+            @"Send SMS", @"sms", 
+            @"Periodically send location to ", @"geospy", 
             nil];
     self.commandNames = [NSArray arrayWithObjects:
             @"camera", 
@@ -344,7 +368,22 @@ NSLog(@"hideControls");
             @"scan", 
             @"aug", 
             @"fetchContacts", 
+            @"sms", 
+            @"geospy", 
             nil];
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:@"initialized"])  {
+        NSLog(@"firstLaunch detected");
+        [[NSUserDefaults standardUserDefaults]
+                setBool:YES forKey:@"initialized"];
+        UIAlertView *alert = [[UIAlertView alloc] 
+                initWithTitle:@"Welcome"
+                message:@"Thank you for using ICEmobile-SX. Return to your web page?"
+                delegate:self cancelButtonTitle:@"OK" 
+                otherButtonTitles:@"Cancel",nil];
+        [alert show];
+        [alert release];
+    }
+
 }
 
 - (void)viewDidUnload

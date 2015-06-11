@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -79,8 +79,12 @@ public class MobiJSFUtils {
         Part part = null;
         InputStream fileStream = null;
         String contentType = null;
+        Map auxMap = AuxUploadResourceHandler.getAuxRequestMap();
         try {
             part = request.getPart(partUploadName);
+            if (null == part) {
+                part = (Part) auxMap.get(partUploadName);
+            }
         } catch (IOException e) {
             throw e;
         } catch (Throwable t) {
@@ -89,12 +93,11 @@ public class MobiJSFUtils {
             // getPart API on Servlet 2.5
         }
         if (null == part) {
-            Map auxMap = AuxUploadResourceHandler.getAuxRequestMap();
-            part = (Part) auxMap.get(partUploadName);
-        }
-        if (null == part) {
-            Map commonsMeta = (Map) request.getAttribute("org.icemobile.file."
-                    + clientId);
+            Map commonsMeta = (Map) request.getAttribute("org.icemobile.file." + clientId);
+            if (null == commonsMeta) {
+                commonsMeta = (Map)
+                    auxMap.get("org.icemobile.file." + clientId);
+            }
             if (null != commonsMeta) {
                 contentType = (String) commonsMeta.get("contentType");
                 fileStream = (InputStream) commonsMeta.get("stream");
@@ -119,7 +122,7 @@ public class MobiJSFUtils {
                 contentType = CONTENT_TYPES.get(fileExtension);
                 fileStream = MobiJSFUtils.class
                     .getClassLoader().getResourceAsStream(
-                        "META-INF/resources/org.icefaces.component.util/" +
+                        "META-INF/resources/org.icefaces.component.skins/simulator/" +
                         simulatedFile );
             }
         }
@@ -190,7 +193,9 @@ public class MobiJSFUtils {
         if (null == auxMap)  {
             return false;
         }
-        return auxMap.containsKey(clientId);
+        boolean inProgress = auxMap.containsKey(clientId) ||
+            auxMap.containsKey("org.icemobile.file." + clientId);
+        return inProgress;
     }
     
     public static String getICEmobileSXScript(String command,
@@ -254,7 +259,7 @@ public class MobiJSFUtils {
     
     /**
      * Return the name value pairs parameters as a ANSI escaped string formatted
-     * in query string parameter format. used by commandButton for f:param
+     * in query string parameter format for ice.s or ice.se calls for f:param
      * support
      * 
      * @param children
@@ -271,6 +276,32 @@ public class MobiJSFUtils {
                             .replace(' ', '+')).append("');");
         }
 
+        builder.append("}");
+        return builder.toString();
+    }
+
+    /**
+     * use this one for mobi:ajaxRequest until JSON builder replaces this stuff
+     * @param children
+     * @return
+     */
+    public static String asParameterStringForMobiAjax(List<UIParameter> children){
+        if (children.isEmpty()){
+            return "{}";
+        }
+        StringBuffer builder = new StringBuffer();
+        builder.append("{");
+        boolean first = true;
+        for (UIParameter param : children){
+            if (!first){
+                builder.append(", ");
+            }
+            builder.append("'").append(DOMUtils.escapeAnsi(param.getName())).append("'");
+            builder.append(": '")
+                    .append(DOMUtils.escapeAnsi((String) param.getValue())
+                            .replace(' ', '+')).append("'");
+            first = false;
+        }
         builder.append("}");
         return builder.toString();
     }

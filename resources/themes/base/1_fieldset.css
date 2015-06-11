@@ -1,5 +1,5 @@
-/***
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+/*
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,24 +16,20 @@
 .mobi-fieldset {
     border-width: 1px;
     border-style: solid;
+    clear: both;
     padding: 0;
 }
 .mobi-fieldset-inset {
-    margin: 10px;
+    margin: 10px !important;
 }
-.mobi-fieldset-row-group {
+.mobi-fieldset .mobi-fieldset-row-group {
     font-weight: bold;
 }
-.mobi-fieldset-row {
+.mobi-fieldset .mobi-fieldset-row {
     border-bottom-width: 1px;
     border-bottom-style: solid;
     padding: 10px;
 }
-.mobi-fieldset-row:last-child {
+.mobi-fieldset .mobi-fieldset-row:last-child {
     border-bottom: none;
-}
-.mobi-fieldset-row > label {
-    font-weight: bold;
-    font-size: 15px; /* TODO needed? */
-    padding-right: 10px;
 }

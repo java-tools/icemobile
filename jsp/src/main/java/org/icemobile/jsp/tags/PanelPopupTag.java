@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.logging.Logger;
 
 import javax.servlet.jsp.JspTagException;
+import org.icemobile.util.CSSUtils;
 
 /**
  *
@@ -44,7 +45,7 @@ public class PanelPopupTag extends BaseBodyTag implements IPanelPopup {
             if (headerText != null && !"".equals(headerText)) {
             	writer.startDiv();
             	writer.writeAttribute("id", id+"_title");
-                writer.writeStyleClass(TITLE_CLASS);
+                writer.writeStyleClass(TITLE_CLASS + " " + CSSUtils.STYLECLASS_BAR_B);
                 writer.writeText(headerText);
                 writer.endElement();// Close title section
             }

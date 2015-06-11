@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.icemobile.util.CSSUtils;
 
 public class OutputListItemsRenderer extends BaseLayoutRenderer {
     private static Logger logger = Logger.getLogger(OutputListItemsRenderer.class.getName());

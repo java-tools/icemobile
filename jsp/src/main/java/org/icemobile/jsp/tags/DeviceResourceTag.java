@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -33,6 +33,7 @@ import org.icemobile.util.Constants;
 import org.icemobile.util.MobiEnvUtils;
 import org.icemobile.util.SXUtils;
 import org.icemobile.util.Utils;
+import org.icemobile.util.CSSUtils.Theme;
 
 /**
  * This is the Device specific detection and script writing tag.
@@ -65,11 +66,12 @@ public class DeviceResourceTag extends BaseSimpleTag {
 	public static final String LINK_SHORTCUT_ICON = "<link href='%s/resources/images/favicon.ico' rel='shortcut icon' type='image/x-icon'/>";
 	public static final String LINK_FAV_ICON = "<link href='%s/resources/images/favicon.ico' rel='icon' type='image/x-icon'/>";
 	
-	public static final String SCRIPT_ICEPUSH = "<script type='text/javascript' src='code.icepush'></script>";
-	public static final String SCRIPT_ICEMOBILE = "<script type='text/javascript' src='%s%s/javascript/icemobile.js'></script>";
+	public static final String SCRIPT_ICEPUSH_PROD = "<script type='text/javascript' src='%s/code.icepush'></script>";
+	public static final String SCRIPT_ICEPUSH = "<script type='text/javascript' src='%s/code.min.icepush'></script>";
+    public static final String SCRIPT_ICEMOBILE = "<script type='text/javascript' src='%s%s/javascript/icemobile.js'></script>";
 	public static final String SCRIPT_ICEMOBILE_PROD = "<script type='text/javascript' src='%s%s/javascript/icemobile-min.js'></script>";
 	public static final String SCRIPT_SIMULATOR = "<script type='text/javascript' src='%s%s/javascript/simulator-interface.js'></script>";
-	public static final String CSS_SIMULATOR = "<link type='text/css' rel='stylesheet' href='%s%s/javascript/simulator.css'/>";
+	public static final String CSS_SIMULATOR = "<link type='text/css' rel='stylesheet' href='%s%s/%s/simulator/simulator.css' />";
 
 	//tag attributes
 	private String name;
@@ -117,8 +119,9 @@ public class DeviceResourceTag extends BaseSimpleTag {
 				}
 			}
 		}
-		writeOutDeviceStyleSheets();
-		if (MobiEnvUtils.isProductionStage(getServletContext()))  {
+		writeOutDeviceStyleSheets(client);
+		boolean prod = MobiEnvUtils.isProductionStage(getServletContext());
+		if (prod)  {
 		    out.write(String.format(SCRIPT_ICEMOBILE_PROD, contextRoot, MobiJspConstants.RESOURCE_BASE_URL));
 		}
 		else{
@@ -126,14 +129,19 @@ public class DeviceResourceTag extends BaseSimpleTag {
 		}
 		
 		if (client.isDesktopBrowser() && client.isSimulator())  {
-		    out.write(String.format(CSS_SIMULATOR, contextRoot,
-                    MobiJspConstants.RESOURCE_BASE_URL));
+		    out.write(String.format(CSS_SIMULATOR, contextRoot, MobiJspConstants.RESOURCE_BASE_URL, DEFAULT_LIBRARY));
 		    out.write(String.format(SCRIPT_SIMULATOR, contextRoot,
                     MobiJspConstants.RESOURCE_BASE_URL));
 		}
 		
 		if( includePush ){
-			out.write(SCRIPT_ICEPUSH);
+		    if( prod ){
+		        out.write(String.format(SCRIPT_ICEPUSH_PROD,contextRoot));
+		    }
+		    else{
+		        out.write(String.format(SCRIPT_ICEPUSH_PROD,contextRoot));
+		        //out.write(String.format(SCRIPT_ICEPUSH,contextRoot)); MOBI-653
+		    }
             String cloudPushId = Utils.getCloudPushId(getRequest());
             if (null != cloudPushId) {
                 out.write("<script type='text/javascript'>");
@@ -152,7 +160,7 @@ public class DeviceResourceTag extends BaseSimpleTag {
         return (includeIOSSmartAppBanner && !client.isSXRegistered());
     }
 
-	private void writeOutDeviceStyleSheets() throws IOException {
+	private void writeOutDeviceStyleSheets(ClientDescriptor client) throws IOException {
 		
 		PageContext pageContext = getContext();
 		JspWriter out = pageContext.getOut();
@@ -161,6 +169,10 @@ public class DeviceResourceTag extends BaseSimpleTag {
 		if( theme == null || "".equals(theme) ){
 		    theme = CSSUtils.deriveTheme((HttpServletRequest)pageContext.getRequest()).fileName();
 		}
+		//android and honeycomb themes deprecated
+		else if( theme.toLowerCase().equals("android") || theme.toLowerCase().equals("honeycomb") ){
+            theme = "android_dark";
+        }
 		
 		String fileName = theme;
 		
@@ -169,8 +181,20 @@ public class DeviceResourceTag extends BaseSimpleTag {
         }
 		
 		String contextRoot = Util.getContextRoot(pageContext.getRequest());
-		out.write("<script type='text/javascript'>document.documentElement.className = document.documentElement.className+' "+theme+"';</script>");
-
+		
+		String markers = " " + theme + " ui-mobile";
+		if( client.isIE10Browser() ){
+            markers += " ie10";
+        }
+        if( client.isAndroidBrowserOrWebView()){
+            markers += " android-browser";
+        }
+        if( client.isDesktopBrowser()){
+            markers += " desktop";
+        }
+        out.write("<script type='text/javascript'>document.documentElement.className = document.documentElement.className+'" 
+                + markers + "';if (window.addEventListener) window.addEventListener('load', function() {document.body.className = 'ui-body-c';});</script>");
+		
 		String cssLink = String.format("<link type='text/css' rel='stylesheet' href='%s%s/%s/%s/%s.css' />", 
 				contextRoot, MobiJspConstants.RESOURCE_BASE_URL, DEFAULT_LIBRARY, theme, fileName);
 		out.write(cssLink);

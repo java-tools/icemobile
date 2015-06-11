@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+  ~ Copyright 2004-2013 ICEsoft Technologies Canada Corp.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the
@@ -18,14 +18,21 @@
 <faces-config version="2.0" xmlns="http://java.sun.com/xml/ns/javaee"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+  <lifecycle>
+    <phase-listener>
+      org.icemobile.impl.application.PushBackOffPhaseListener
+    </phase-listener>
+  </lifecycle>
  <application>
     <resource-handler>org.icefaces.mobi.component.qrcode.generator.QRCodeResourceHandler</resource-handler>
-    <!-- resource-handler>org.icefaces.mobi.component.gmap.GMapResourceHandler</resource-handler -->
     <system-event-listener>
         <system-event-listener-class>org.icefaces.mobi.renderkit.InlineScriptEventListener</system-event-listener-class>
         <system-event-class>javax.faces.event.PreRenderViewEvent</system-event-class>
     </system-event-listener>
-
+    <system-event-listener>
+        <system-event-listener-class>org.icemobile.component.impl.event.MobiClientVariableListener</system-event-listener-class>
+        <system-event-class>javax.faces.event.PreRenderComponentEvent</system-event-class>
+    </system-event-listener>
  </application>
 
 </faces-config>

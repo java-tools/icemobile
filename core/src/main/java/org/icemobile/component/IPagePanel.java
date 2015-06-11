@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -26,5 +26,8 @@ public interface IPagePanel extends IMobiComponent{
     public Object getHeader();
     public Object getBody();
     public Object getFooter();
+    public String getHeaderSwatch();
+    public String getBodySwatch();
+    public String getFooterSwatch();
 
 }

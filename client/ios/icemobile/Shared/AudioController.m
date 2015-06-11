@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,12 +16,31 @@
 
 #import "AudioController.h"
 #import "NativeInterface.h"
+#import "IceUtil.h"
 
 @implementation AudioController
 
 @synthesize nativeInterface;
-@synthesize recordControl;
-@synthesize submitControl;
+@synthesize isRecording;
+@synthesize recordStopButton;
+@synthesize cancelButton;
+@synthesize useButton;
+
+- (IBAction) doRecordStop {
+    NSLog(@"AudioController doRecordStop");
+    self.isRecording = !self.isRecording;
+    NSString *toggledTitle;
+    if (self.isRecording)  {
+        [IceUtil makeFancyButton:recordStopButton withColor:[UIColor redColor]];
+        toggledTitle = @"Stop";
+        [self.nativeInterface recordStart];
+    } else {
+        [IceUtil makeFancyButton:recordStopButton withColor:[UIColor grayColor]];
+        toggledTitle = @"Record";
+        [self.nativeInterface recordStop];
+    }
+    [recordStopButton setTitle:toggledTitle forState:UIControlStateNormal];
+}
 
 - (IBAction) doRecord  {
     NSLog(@"AudioController doRecord");
@@ -35,39 +54,20 @@
 
 - (IBAction) doDone  {
     NSLog(@"AudioController doDone");
+    if (self.isRecording)  {
+        [self.nativeInterface recordStop];
+        self.isRecording = NO;
+    }
     [self.nativeInterface recordDone];
 }
 
 - (IBAction) doCancel  {
     NSLog(@"AudioController doCancel");
-    [self.nativeInterface recordDismiss];
-}
-
-- (IBAction) recordAction  {
-    NSLog(@"AudioController recordAction ");
-    if (0 == recordControl.selectedSegmentIndex)  {
-        [self doRecord];
-        return;
+    if (self.isRecording)  {
+        [self.nativeInterface recordStop];
+        self.isRecording = NO;
     }
-    if (1 == recordControl.selectedSegmentIndex)  {
-        [self doStop];
-        [recordControl setSelectedSegmentIndex:-1];
-        return;
-    }
-}
-
-- (IBAction) submitAction  {
-    NSLog(@"AudioController submitAction");
-    if (0 == submitControl.selectedSegmentIndex)  {
-        [self doCancel];
-        [submitControl setSelectedSegmentIndex:-1];
-        return;
-    }
-    if (1 == submitControl.selectedSegmentIndex)  {
-        [self doDone];
-        [submitControl setSelectedSegmentIndex:-1];
-        return;
-    }
+    [self.nativeInterface recordCancel];
 }
 
 
@@ -94,6 +94,15 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
+}
+
+- (void)viewWillAppear:(BOOL)animated  {
+    [super viewWillAppear:animated];
+
+    [IceUtil makeFancyButton:self.recordStopButton withColor:[UIColor grayColor]];
+    [IceUtil makeFancyButton:self.cancelButton];
+    [IceUtil makeFancyButton:self.useButton];
+    
 }
 
 - (void)viewDidUnload

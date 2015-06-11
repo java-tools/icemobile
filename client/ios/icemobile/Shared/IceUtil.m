@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2012 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -15,26 +15,73 @@
 */
 
 #import "IceUtil.h"
-#import <QuartzCore/QuartzCore.h>
 
 @implementation IceUtil
 
-+ (void)makeFancyButton:(UIButton*)button  {
++ (void)makeFancyButton:(UIButton*)button withLayer:(CALayer*)fancyLayer  {
+    CALayer *oldLayer = nil;
+    for (CALayer *theLayer in [[button layer] sublayers]) {
+        if ([@"fancyGradient" isEqualToString:theLayer.name ])  {
+            oldLayer = theLayer;
+        }
+    }
+    if (nil != oldLayer)  {
+        [oldLayer removeFromSuperlayer];
+    }
+    [[button layer] insertSublayer:fancyLayer atIndex:0];
+
+    [[button layer] setCornerRadius:8.0f];
+    [[button layer] setMasksToBounds:YES];
+    [[button layer] setBorderWidth:1.0f];
+}
+
++ (void)makeFancyButton:(UIButton*)button withColor:(UIColor*)color  {
+
     CAGradientLayer *gradientLayer = [[CAGradientLayer alloc] init];
     [gradientLayer setBounds:[button bounds]];
+    gradientLayer.name = @"fancyGradient";
     [gradientLayer setPosition:
                 CGPointMake([button bounds].size.width/2,
                        [button bounds].size.height/2)];
         [gradientLayer setColors:
                      [NSArray arrayWithObjects:
                             (id)[[UIColor whiteColor] CGColor], 
-                            (id)[[UIColor grayColor] CGColor], nil]];
-    [[button layer] insertSublayer:gradientLayer atIndex:0];
+                            (id)[color CGColor], nil]];
+    NSLog(@"makeFancyButton layers %@", [[button layer] sublayers]);
+
+    [IceUtil makeFancyButton:button withLayer:gradientLayer];
+
     [gradientLayer release];
 
-    [[button layer] setCornerRadius:8.0f];
-    [[button layer] setMasksToBounds:YES];
-    [[button layer] setBorderWidth:1.0f];
 }
+
+
++ (void)pushFancyButton:(UIButton *)button  {
+
+    CAGradientLayer *gradientLayer = [[CAGradientLayer alloc] init];
+    [gradientLayer setBounds:[button bounds]];
+    gradientLayer.name = @"fancyGradient";
+    [gradientLayer setBorderColor:[[UIColor grayColor] CGColor]];
+    [gradientLayer setCornerRadius:8.0f];
+    [gradientLayer setBorderWidth:4.0f];
+    [gradientLayer setPosition:
+                CGPointMake([button bounds].size.width/2,
+                       [button bounds].size.height/2)];
+        [gradientLayer setColors:
+                     [NSArray arrayWithObjects:
+                            (id)[[UIColor darkGrayColor] CGColor],
+                            (id)[[UIColor grayColor] CGColor],
+                            (id)[[UIColor lightGrayColor] CGColor], nil]]; 
+
+
+    [IceUtil makeFancyButton:button withLayer:gradientLayer];
+    [gradientLayer release];
+
+}
+
++ (void)makeFancyButton:(UIButton*)button  {
+    [IceUtil makeFancyButton:button withColor:[UIColor grayColor]];
+}
+
 
 @end

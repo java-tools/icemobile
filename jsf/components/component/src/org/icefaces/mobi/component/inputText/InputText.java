@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -21,7 +21,7 @@ import org.icefaces.mobi.utils.Utils;
 
 import javax.faces.context.FacesContext;
 
-public class  InputText extends InputTextBase {
+public class InputText extends InputTextBase {
 
     //passthrough attributes for textArea
     private Attribute[] textAreaAttributeNames = {
@@ -41,7 +41,6 @@ public class  InputText extends InputTextBase {
 
     //passthrough attributes for input text
     private Attribute[] inputtextAttributeNames = {
-            new Attribute("type", null),
             new Attribute("autocomplete", null),
             new Attribute("autocapitalize", null),
             new Attribute("autocorrect", null),

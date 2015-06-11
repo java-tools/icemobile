@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@
 @synthesize controller;
 @synthesize userAgent;
 @synthesize activeDOMElementId;
+@synthesize geospyName;
 @synthesize maxwidth;
 @synthesize maxheight;
 @synthesize soundFilePath;
@@ -49,6 +50,7 @@
 @synthesize soundRecorder;
 @synthesize popoverSource;
 @synthesize motionManager;
+@synthesize locationManager;
 
 static char base64EncodingTable[64] = {
   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -108,6 +110,12 @@ static char base64EncodingTable[64] = {
         [self aug:[params objectForKey:@"id"] locations:params];
     } else if ([@"fetchContacts" isEqualToString:commandName])  {
         [self address:[params objectForKey:@"id"]];
+//    } else if ([@"sms" isEqualToString:commandName])  {
+//        [self sms:[params objectForKey:@"n"]
+//                    body:[params objectForKey:@"body"]];
+//    } else if ([@"geospy" isEqualToString:commandName])  {
+//        [self geospy:[params objectForKey:@"id"]
+//                withStrategy:[params objectForKey:@"strategy"]];
     }
 
     return YES;
@@ -130,8 +138,10 @@ static char base64EncodingTable[64] = {
     if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera ])  {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
         picker.showsCameraControls = YES;
+        //showImagePicker must be called before overlay to work on iPad
+        [self showImagePicker:picker];
         CGRect overlayFrame = CGRectMake(0,picker.view.frame.size.height - 100,
-            picker.view.frame.size.width, 100);
+            picker.view.frame.size.width, 50);
         UIView *overlayView = [[UIView alloc] initWithFrame:overlayFrame];
         UIButton *albumButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
         [albumButton setTitle:@"Album" forState:UIControlStateNormal];
@@ -144,8 +154,9 @@ static char base64EncodingTable[64] = {
         [overlayView addSubview:albumButton];
         picker.cameraOverlayView = overlayView;
         self.currentPicker = picker;
+    } else  {
+        [self showImagePicker:picker];
     }
-    [self showImagePicker:picker];
     
     return YES;
 }
@@ -236,6 +247,11 @@ static char base64EncodingTable[64] = {
     NSString *audioName = self.activeDOMElementId;
     [controller completeFile:self.soundFilePath 
             forComponent:audioName withName:audioName];
+}
+
+- (void)recordCancel  {
+    [self recordDismiss];
+    [self.controller doCancel];
 }
 
 - (void)recordDismiss  {
@@ -427,6 +443,7 @@ static char base64EncodingTable[64] = {
     } else {
         [controller dismissModalViewControllerAnimated:YES];
     }
+    [self.controller doCancel];
 }
 
 - (BOOL)address: (NSString*)contactId  {
@@ -514,11 +531,39 @@ NSLog(@"Found record %@", result);
 - (void)peoplePickerNavigationControllerDidCancel:(ABPeoplePickerNavigationController *)peoplePicker  {
     NSLog(@"NativeInterface peoplePickerNavigationControllerDidCancel ");
     [self dismissAddress];
+    [self.controller doCancel];
+}
+
+- (BOOL)sms:(NSString*)number body:(NSString*)body {
+    NSLog(@"NativeInterface sms ");
+
+    MFMessageComposeViewController *smsController = [[[MFMessageComposeViewController alloc] init] autorelease];
+    if ([MFMessageComposeViewController canSendText])  {
+        smsController.body = body;
+        smsController.recipients = [NSArray arrayWithObjects:number, nil];
+        smsController.messageComposeDelegate = self;
+        [self.controller presentModalViewController:smsController animated:YES];
+    }
+
+    return YES;
+}
+
+- (void)messageComposeViewController:(MFMessageComposeViewController *)controller
+        didFinishWithResult:(MessageComposeResult)result  {
+    //no return value from sms so effectively cancel
+    [self.controller doCancel];
+    [self.controller dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (BOOL)aug: (NSString*)augId locations:(NSDictionary *)places {
     self.activeDOMElementId = augId;
-    LogTrace(@"NativeInterface aug ");
+    NSLog(@"NativeInterface aug ");
+    NSString *viewer = [places objectForKey:@"v"];
+    NSLog(@"NativeInterface aug VIEWER %@", viewer);
+    if ([viewer isEqualToString:@"vuforia"])  {
+        [self augMarkerView:augId withMarkers:places];
+        return YES;
+    }
     if (nil == self.augController)  {
         if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)  {
             self.augController = [[ARViewController alloc] 
@@ -529,13 +574,6 @@ NSLog(@"Found record %@", result);
         }
         augController.nativeInterface = self;
     }
-    NSString *viewer = [places objectForKey:@"v"];
-    LogDebug(@"NativeInterface aug VIEWER %@", viewer);
-    if ([viewer isEqualToString:@"vuforia"])  {
-        [self augMarkerView:augId withMarkers:places];
-        return YES;
-    }
-
 
     NSString *urlBase = [places objectForKey:@"ub"];
 	NSMutableArray *placeLabels = [NSMutableArray array];
@@ -624,9 +662,9 @@ NSLog(@"Found record %@", result);
 
 - (void)augMarkerView:(NSString*) augId withMarkers:(NSDictionary *)markers  {
 #ifdef USE_ARMARKER
-    LogTrace(@"NativeInterface augMarkerView");
+    NSLog(@"NativeInterface augMarkerView");
 
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)  {
+//    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)  {
 //        if (nil == self.augPopover)  {
 //            augPopover = [[UIPopoverController alloc]
 //                    initWithContentViewController:augController];
@@ -636,14 +674,15 @@ NSLog(@"Found record %@", result);
 //                                 inView:self.controller.view
 //               permittedArrowDirections:UIPopoverArrowDirectionAny 
 //                               animated:YES];
-    } else {
+//    } else {
         ARMarkerViewer *arMarkerViewer = [[ARMarkerViewer alloc] init];
         arMarkerViewer.nativeInterface = self;
         arMarkerViewer.arViewRect = [[UIScreen mainScreen] bounds];
         arMarkerViewer.markers = markers;
         [controller presentModalViewController:[arMarkerViewer arMarkerController] animated:YES];
-    }
-
+//    }
+#else
+    NSLog(@"NativeInterface not compiled for augMarkerView");
 #endif
 }
 
@@ -665,11 +704,13 @@ NSLog(@"Found record %@", result);
 }
 
 - (void)augMarkerDismiss  {
+    NSLog(@"augMarkerDismiss");
     [self augMarkerHide];
     [self.controller doCancel];
 }
 
 - (void)augDismiss  {
+    NSLog(@"augDismiss");
     [self.augController stop];
     [self augHide];
     [self.controller doCancel];
@@ -682,6 +723,51 @@ NSLog(@"Found record %@", result);
     LogDebug(@"NativeInterface aug selected %@", augResult);
     [controller completePost:augResult forComponent:augName
             withName:augName];
+}
+
+- (void)augFormDone:(NSString*)augResult {
+    [self augMarkerHide];
+    NSString *augName = self.activeDOMElementId;
+    LogDebug(@"NativeInterface augFormDone selected %@", augResult);
+    [controller completePost:augResult forComponent:augName
+            withName:augName];
+}
+
+
+- (BOOL)geospy:(NSString*) geoId withStrategy:(NSString*) strategy  {
+    self.geospyName = geoId;
+    if (nil == self.locationManager)
+        self.locationManager = [[CLLocationManager alloc] init];
+ 
+    self.locationManager.delegate = self;
+    if ([@"continuous" isEqualToString:strategy]) {
+        NSLog(@"geospy starting continuous updates");
+        [self.locationManager startUpdatingLocation];
+    } else {
+        NSLog(@"geospy starting significant updates");
+        [self.locationManager startMonitoringSignificantLocationChanges];
+    }
+    [self.controller doCancel];
+    return YES;
+}
+
+- (void)locationManager:(CLLocationManager *)manager
+        didUpdateLocations:(NSArray *)locations {
+   CLLocation* location = [locations lastObject];
+   NSString *geoResult = [NSString stringWithFormat:@"%+.6f,%+.6f,%+.6f",
+        location.coordinate.latitude,
+        location.coordinate.longitude,
+        location.altitude];
+
+    NSLog(@"geospy location changed %@\n", geoResult);
+    if (self.uploading)  {
+        NSLog(@"geospy already uploading\n");
+        return;
+    }
+    self.uploading = YES;
+    [self.controller completePost:geoResult forComponent:self.geospyName
+            withName:self.geospyName];
+
 }
 
 - (void)startMotionManager {
@@ -717,6 +803,11 @@ NSLog(@"Found record %@", result);
     self.motionManager = nil;
 }
 
+- (void)setProgress:(NSInteger)percent withLabel:(NSString*)labelText  {
+    [controller setProgressLabel:labelText];
+    [controller setProgress:percent];
+}
+
 - (BOOL)upload: (NSString*)formId  {
     if (self.uploading)  {
     LogInfo(@" already uploading, ignoring request");
@@ -725,6 +816,7 @@ NSLog(@"Found record %@", result);
     self.uploading = YES;
     self.activeDOMElementId = formId;
 
+    [controller setProgressLabel:@"Upload Progress"];
     [controller setProgress:0];
     NSString* actionURL = [controller prepareUpload:formId];
     NSDictionary *parts = [self parseQuery:[controller getFormData:formId]];
@@ -906,6 +998,7 @@ NSLog(@"Found record %@", result);
 - (void)connection:(NSURLConnection *)connection didSendBodyData:(NSInteger)bytesWritten totalBytesWritten:(NSInteger)totalBytesWritten totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite  {
     LogDebug(@"didSendBodyData %d bytes of %d",totalBytesWritten, totalBytesExpectedToWrite);
     NSInteger percentProgress = (totalBytesWritten * 100) / totalBytesExpectedToWrite;
+    [controller setProgressLabel:@"Upload Progress"];
     [controller setProgress:percentProgress];
 }
 
@@ -915,6 +1008,7 @@ NSLog(@"Found record %@", result);
     NSString *responseString = [[NSString alloc] initWithData:receivedData
             encoding:NSUTF8StringEncoding];
 
+    [controller setProgressLabel:@"Upload Progress"];
     [controller setProgress:100];
     [controller handleResponse:responseString];
     [responseString release];

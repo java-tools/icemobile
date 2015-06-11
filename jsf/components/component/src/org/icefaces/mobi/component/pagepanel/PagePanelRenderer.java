@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -25,7 +25,9 @@ import javax.faces.context.ResponseWriter;
 import org.icefaces.mobi.renderkit.BaseLayoutRenderer;
 import org.icefaces.mobi.utils.HTML;
 import org.icefaces.mobi.utils.JSFUtils;
+import org.icefaces.mobi.utils.MobiJSFUtils;
 import org.icefaces.mobi.utils.PassThruAttributeWriter;
+import org.icemobile.util.CSSUtils;
 
 
 public class PagePanelRenderer extends BaseLayoutRenderer {
@@ -39,15 +41,20 @@ public class PagePanelRenderer extends BaseLayoutRenderer {
         String clientId = component.getClientId(facesContext);
         // render a top level div and apply the style and style class pass through attributes
         writer.startElement(HTML.DIV_ELEM, pagePanel);
+        writer.writeAttribute(HTML.CLASS_ATTR, "mobi-pagePanel", null);
         PassThruAttributeWriter.renderNonBooleanAttributes(writer, pagePanel,
                 pagePanel.getCommonAttributeNames());
         writer.writeAttribute(HTML.ID_ATTR, clientId + "_pgPnl", HTML.ID_ATTR);
         if (pagePanel.getStyle()!=null){
             writer.writeAttribute(HTML.STYLE_ATTR, pagePanel.getStyle(), HTML.STYLE_ATTR);
         }
-        StringBuilder headerClass = new StringBuilder(PagePanel.HEADER_CLASS);
-        StringBuilder bodyClass = new StringBuilder(PagePanel.BODY_CLASS);
-        StringBuilder footerClass = new StringBuilder(PagePanel.FOOTER_CLASS);
+        StringBuilder headerClass = new StringBuilder(PagePanel.HEADER_CLASS
+                + (MobiJSFUtils.getClientDescriptor().isSupportsFixedPosition() ? "ui-header-fixed " : "")
+                +" ui-bar-"+component.getAttributes().get("headerSwatch"));
+        StringBuilder bodyClass = new StringBuilder(PagePanel.BODY_CLASS+"ui-body-"+component.getAttributes().get("bodySwatch"));
+        StringBuilder footerClass = new StringBuilder(PagePanel.FOOTER_CLASS
+                + (MobiJSFUtils.getClientDescriptor().isSupportsFixedPosition() ? "ui-footer-fixed " : "")
+                +"ui-bar-"+component.getAttributes().get("footerSwatch"));
         StringBuilder headerFooterContentsClass = new StringBuilder(PagePanel.CTR_CLASS);
 
         // find out if header and/or footer facets are present as this will directly 

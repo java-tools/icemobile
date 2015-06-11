@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -17,7 +17,7 @@
 package org.icemobile.jsp.tags;
 
 import javax.servlet.jsp.JspTagException;
-import javax.servlet.jsp.tagext.TagSupport;
+import javax.servlet.jsp.tagext.BodyTagSupport;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.logging.Logger;
@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 /**
  *
  */
-public class PagePanelTag extends TagSupport {
+public class PagePanelTag extends BodyTagSupport {
     
     public static final String CTR_CLASS = "mobi-pagePanel-ctr";
 
@@ -39,9 +39,9 @@ public class PagePanelTag extends TagSupport {
 
         StringBuilder tag = new StringBuilder(TagUtil.DIV_TAG);
         if (id != null && !"".equals(id)) {
-            tag.append(" id=\"").append(getId()).append("_pgPnl\"");
+            tag.append(" id='").append(getId()).append("_pgPnl'");
         }
-        tag.append(">");
+        tag.append(" class='mobi-pagePanel'>");
 
         try {
             out.write(tag.toString());

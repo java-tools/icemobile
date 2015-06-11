@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -53,7 +53,7 @@ public class ScanMeta extends UIComponentBaseMeta {
      @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.STYLECLASS)
      private String styleClass;
 
-    @Property(defaultValue="scan captured", tlddoc="The message displays upon successful capture from device.")
+    @Property(defaultValue="Scan Captured", tlddoc="The message displays upon successful capture from device.")
     private String captureMessageLabel;
 
     @Property(defaultValue="Scan QR Code", tlddoc="The button label for this component.")

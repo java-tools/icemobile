@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -23,6 +23,9 @@ if (!window.ice.mobile) {
         namespace.mobile = true;
 
         namespace.progress = function(amount)  {
+          //remove return line below, return true, and customize
+          //progress indicator within application
+          return false;
           var canvas = document.getElementById('progMeterCanvas');
           if (canvas.getContext){
             var ctx = canvas.getContext('2d');
@@ -39,6 +42,7 @@ if (!window.ice.mobile) {
             ctx.lineWidth = 2;
             ctx.stroke();
           }
+          return true;
         }
         
         namespace.native = function(command)  {
@@ -71,9 +75,11 @@ if (!window.ice.mobile) {
             for (var i in tempInputs)  {
                 form.removeChild(tempInputs[i]);
             }
+            context.source = null;
             context.sourceid = "";
             context.formid = "";
             context.serialized = "";
+            context.element = null;
             context.onevent = null;
             context.onerror = null;
         }
@@ -125,8 +131,10 @@ if (!window.ice.mobile) {
                 }
             }
 
+            context.source = source;
             context.sourceid = sourceId;
             context.formid = formId;
+            context.element = element;
             context.onevent = options.onevent;
             context.onerror = options.onerror;
             ice.upload(formId);

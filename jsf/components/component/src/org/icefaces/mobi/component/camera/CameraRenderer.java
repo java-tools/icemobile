@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -83,14 +83,17 @@ public class CameraRenderer extends Renderer {
       rendering markup moved to core renderer for use with JSP and JSF
      */
     public void encodeEnd(FacesContext facesContext, UIComponent uiComponent)
-           throws IOException {
-       Camera camera = (Camera) uiComponent;
-       if (MobiJSFUtils.uploadInProgress(camera))  {
-           camera.setButtonLabel(camera.getCaptureMessageLabel()) ;
-       }
-       DeviceCoreRenderer renderer = new DeviceCoreRenderer();
-       ResponseWriterWrapper writer = new ResponseWriterWrapper(facesContext.getResponseWriter());
-       renderer.encode(camera, writer, false);
+        throws IOException {
+        Camera camera = (Camera) uiComponent;
+        String oldLabel = camera.getButtonLabel();
+        if (MobiJSFUtils.uploadInProgress(camera))  {
+            camera.setButtonLabel(camera.getCaptureMessageLabel()) ;
+        } 
+        DeviceCoreRenderer renderer = new DeviceCoreRenderer();
+        ResponseWriterWrapper writer = new ResponseWriterWrapper(
+                facesContext.getResponseWriter());
+        renderer.encode(camera, writer, false);
+        camera.setButtonLabel(oldLabel);
     }
 
 }

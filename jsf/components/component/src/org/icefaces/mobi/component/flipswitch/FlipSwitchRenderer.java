@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -65,8 +65,8 @@ public class FlipSwitchRenderer extends CoreRenderer {
         if (submittedString != null) {
             boolean submittedValue = isChecked(submittedString);
             flipswitch.setSubmittedValue(submittedValue);
+            decodeBehaviors(facesContext, flipswitch);
         }
-        decodeBehaviors(facesContext, flipswitch);
     }
 
     // The encodeEnd method, in the renderer, is responsible for rendering
@@ -125,14 +125,14 @@ public class FlipSwitchRenderer extends CoreRenderer {
         writer.writeAttribute("class", styleClass, "class");
         writer.startElement(HTML.SPAN_ELEM, uiComponent);
 
-        writer.writeAttribute("class", "mobi-flip-switch-txt", null);
+        boolean switchVal = (Boolean) flipswitch.getValue();
+        writer.writeAttribute("class", "mobi-flipswitch-txt-on" + (switchVal ? "" : " ui-btn-up-c" ), null);
         writer.write(labelOn);
         writer.endElement(HTML.SPAN_ELEM);
-        boolean switchVal = (Boolean) flipswitch.getValue();
         writeHiddenField(uiComponent, clientId, writer, switchVal);
 
         writer.startElement(HTML.SPAN_ELEM, uiComponent);
-        writer.writeAttribute("class", "mobi-flip-switch-txt", null);
+        writer.writeAttribute("class", "mobi-flipswitch-txt-off" + (switchVal ? " ui-btn-up-c" : ""), null);
         writer.write(labelOff);
         writer.endElement(HTML.SPAN_ELEM);
         writer.endElement(HTML.ANCHOR_ELEM);

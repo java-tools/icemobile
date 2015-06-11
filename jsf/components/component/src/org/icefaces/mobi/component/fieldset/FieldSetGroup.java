@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -19,7 +19,7 @@ package org.icefaces.mobi.component.fieldset;
 
 public class FieldSetGroup extends FieldSetGroupBase {
 
-	public static final String FIELDSET_CLASS = "mobi-fieldset";
+	public static final String FIELDSET_CLASS = "mobi-fieldset ui-field-contain";
 	public static final String FIELDSETINSET_CLASS = "mobi-fieldset-inset";
 	
     public FieldSetGroup() {

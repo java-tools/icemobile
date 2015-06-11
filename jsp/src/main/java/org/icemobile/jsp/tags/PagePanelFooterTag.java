@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -19,22 +19,24 @@ package org.icemobile.jsp.tags;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspTagException;
 import javax.servlet.jsp.tagext.Tag;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.icemobile.util.ClientDescriptor;
 import org.icemobile.util.HTML;
-
 
 /**
  *
  */
 public class PagePanelFooterTag extends TagSupport {
 
-    public static final String FOOTER_CLASS = "mobi-pagePanel-footer";
+    public static final String FOOTER_CLASS = "mobi-pagePanel-footer ui-footer ";
 
     private static Logger LOG = Logger.getLogger(PagePanelFooterTag.class.getName());
     public PagePanelTag mParent;
+    private String swatch = "a";
 
     public void setParent(Tag parent) {
        if (!(parent instanceof PagePanelTag)) {
@@ -43,7 +45,10 @@ public class PagePanelFooterTag extends TagSupport {
        mParent = (PagePanelTag) parent;
    }
     public int doStartTag() throws JspTagException {
-        StringBuilder footerClass = new StringBuilder(FOOTER_CLASS);
+        ClientDescriptor client = ClientDescriptor.getInstance((HttpServletRequest)pageContext.getRequest());
+        StringBuilder footerClass = new StringBuilder(FOOTER_CLASS 
+                + (client.isSupportsFixedPosition() ? "ui-footer-fixed " : "")
+                + "ui-bar-"+swatch);
         if (mParent != null) {
             mParent.setHasHeader(true);
             if (mParent.getStyleClass() !=null){
@@ -75,5 +80,8 @@ public class PagePanelFooterTag extends TagSupport {
         }
         return EVAL_PAGE;
     }
+    
+    public String getSwatch(){ return swatch; }
+    public void setSwatch(String swatch){ this.swatch = swatch; }
 
 }

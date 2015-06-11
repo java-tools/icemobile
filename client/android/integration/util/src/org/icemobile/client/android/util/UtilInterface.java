@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -64,13 +64,13 @@ public class UtilInterface implements JavascriptInterface,
     private Handler handler;
     private String url;
     private String userAgent;
-    private Activity container;
+    private final Activity container;
     private final WebView view;
-    private LinkedList<HttpPost> postQueue;
+    private LinkedList<HttpPostTask> postQueue;
     private LinkedList<String> responseQueue;
     private static final int PROGRESS_INTERVAL = 10;  //Percent
-    private static final int PROGRESS_MSG = 0;
     private static final int RESPONSE_MSG = 1;
+    private static final int MSG_PADDING = 150;
 
     public UtilInterface (Activity container, WebView webView, String userAgent) {
 	this.container = container;
@@ -82,9 +82,6 @@ public class UtilInterface implements JavascriptInterface,
 		@Override
 		    public void handleMessage(Message msg) {
 		    switch(msg.what) {
-		    case PROGRESS_MSG:
-			loadURL("javascript:ice.progress(" + msg.arg1 + ");");
-			break;
 		    case RESPONSE_MSG:
 			loadURL("javascript:ice.handleResponse(window.ICEutil.getResult());");
 			break;
@@ -104,6 +101,11 @@ public class UtilInterface implements JavascriptInterface,
     }
 
     public void submitForm(String actionUrl, String serializedForm) {
+        submitForm(actionUrl, serializedForm, null);
+    }
+
+    public void submitForm(String actionUrl, String serializedForm,
+            Runnable callback) {
 	//Log.e("ICEutil", "submitForm " + actionUrl);
 	boolean gotValue = true;
 	String[] result;
@@ -116,8 +118,13 @@ public class UtilInterface implements JavascriptInterface,
 	    for (int i=0; i<params.length; i++) {
             String packedName = params[i].getName();
             int nameSplit = packedName.indexOf("-");
-            String paramType = packedName.substring(0, nameSplit);
-            String paramName = packedName.substring(nameSplit + 1);
+            //if type is missing, "hidden" will be assumed
+            String paramType = "hidden";
+            String paramName = packedName;
+            if (nameSplit > 0)  {
+                paramType = packedName.substring(0, nameSplit);
+                paramName = packedName.substring(nameSplit + 1);
+            }
             if ("file".equals(paramType)) {
                 String fname = "undefined";
                 try {
@@ -136,7 +143,7 @@ public class UtilInterface implements JavascriptInterface,
                 }
             } else {
                 StringBody sb = new StringBody(URLDecoder.decode(params[i].getValue(),"UTF-8"));
-                contentSize += sb.getContentLength();
+                contentSize += sb.getContentLength() + MSG_PADDING;
                 content.addPart(URLDecoder.decode(paramName,"UTF-8"), sb);
             }
 	    }
@@ -146,16 +153,19 @@ public class UtilInterface implements JavascriptInterface,
 	    CookieManager cookieManager = CookieManager.getInstance();
 	    postRequest.setHeader("Cookie", cookieManager.getCookie(url));
 	    postRequest.setHeader("Faces-Request", "partial/ajax");
+	    if (contentSize < content.getContentLength()) {
+		contentSize = content.getContentLength();
+	    }
 	    content.measureProgress(contentSize/(PROGRESS_INTERVAL+1));
 	    postRequest.setEntity(content);
-	    queueRequest(postRequest);
+	    queueRequest(postRequest, callback);
 	} catch (Throwable e) {
 	    Log.e("ICEutil", "Failed to submit form ", e);
 	}
     }
 
-    private void queueRequest(HttpPost postRequest) {
-	postQueue.add(postRequest);
+    private void queueRequest(HttpPost postRequest, Runnable callback) {
+	postQueue.add(new HttpPostTask(postRequest, callback));
 	//Log.e("ICEutil", "Request q=" + postQueue.size());
 	if (postQueue.size() == 1) {
 	    Thread thread = new Thread(this);
@@ -170,12 +180,16 @@ public class UtilInterface implements JavascriptInterface,
 	try {
 	    while (postQueue.size() > 0) {
 		sendProgress(0);
-		postRequest = postQueue.remove();
+		HttpPostTask postTask = postQueue.remove();
+		postRequest = postTask.httpPost;
 		HttpResponse res = httpClient.execute(postRequest);
 		sendProgress(100);
 		StringWriter writer = new StringWriter();
 		IOUtils.copy(res.getEntity().getContent(), writer);
 		setResult(writer.toString());
+        if (null != postTask.callback) {
+            postTask.callback.run();
+        }
 		handler.sendEmptyMessage(RESPONSE_MSG);
 	    }
 	} catch (Throwable e) {
@@ -204,6 +218,11 @@ public class UtilInterface implements JavascriptInterface,
     }
 
     public void loadURL(final String url) {
+        //ICEmobile-SX case where we do not have a WebView
+        if (null == view)  {
+            Log.d("ICEutil", "WebView is null, ignoring loadURL " + url);
+            return;
+        }
 	handler.post(new Runnable() {
 		public void run() {
 		    //Log.e("ICEmobile","Loading URL: " + url);
@@ -213,12 +232,7 @@ public class UtilInterface implements JavascriptInterface,
     }
 
     private void sendProgress(int progress) {
-	if (progress <= 100) {
-	    Message msg = new Message();
-	    msg.what = PROGRESS_MSG;
-	    msg.arg1 = progress;
-	    handler.sendMessage(msg);
-	}
+	((SubmitProgressListener)container).submitProgress(progress);
     }
 
     private BasicNameValuePair[] getNameValuePairs(String data, String delim1, String delim2) {
@@ -244,6 +258,12 @@ public class UtilInterface implements JavascriptInterface,
             }
         }
         return res.toArray(new BasicNameValuePair[0]);
+    }
+
+    public void setCookie(String URL, String value) {
+        CookieSyncManager.createInstance(container);
+	    CookieManager cookieManager = CookieManager.getInstance();
+        cookieManager.setCookie(URL, value);
     }
 
     public void setUrl(String URL) {
@@ -358,8 +378,7 @@ public class UtilInterface implements JavascriptInterface,
 	    if (outputStream_ != null) {
 		outputStream_.setChunkSize(chunkSize);
 	    }
-	}
-	    
+	}	    
     }
 
     private class CountingOutputStream extends FilterOutputStream {
@@ -395,4 +414,15 @@ public class UtilInterface implements JavascriptInterface,
 	    super.write(b);
 	}
     }
+}
+
+class HttpPostTask  {
+    HttpPost httpPost;
+    Runnable callback;
+
+    public HttpPostTask(HttpPost httpPost, Runnable callback)  {
+        this.httpPost = httpPost;
+        this.callback = callback;
+    }
+
 }

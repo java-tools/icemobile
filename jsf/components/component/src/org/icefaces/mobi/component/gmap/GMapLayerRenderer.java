@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -39,8 +39,6 @@ public class GMapLayerRenderer extends CoreRenderer {
         ResponseWriter writer = context.getResponseWriter();
         String clientId = component.getClientId(context);
         GMapLayer gMapLayer = (GMapLayer) component;
-        writer.startElement("span", null);
-        writer.writeAttribute("id", clientId + "_layer", null);
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
         if (gMapLayer.getLayerType() != null) {
@@ -64,6 +62,5 @@ public class GMapLayerRenderer extends CoreRenderer {
             }
         }
         writer.endElement("script");
-        writer.endElement("span");
     }
 }

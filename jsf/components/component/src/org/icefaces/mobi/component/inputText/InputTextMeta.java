@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -54,8 +54,7 @@ import org.icefaces.mobi.utils.TLDConstants;
 public class InputTextMeta extends UIInputMeta {
 
     @Property(defaultValue = "text", tlddoc = "The type attribute for the input element. " +
-    		"Currently supports text, textarea, inputSecret,"+
-    		"phone, url, email, number, date, time, datetime.  Depending " +
+    		"Currently supports text, textarea, phone, url, email, number, date, time, datetime.  Depending " +
     		"on device capability, a type-specific keyboard may be displayed. ")
     private String type;
 
@@ -137,4 +136,7 @@ public class InputTextMeta extends UIInputMeta {
 
     @Property(defaultValue = "false", tlddoc = TLDConstants.SINGLESUBMIT)
     private boolean singleSubmit;
+    
+    @Property(tlddoc = "The rendered label for the input field.")
+    private String label;
 }

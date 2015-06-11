@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -17,8 +17,12 @@
 package org.icemobile.jsp.tags;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
 import javax.servlet.jsp.tagext.SimpleTagSupport;
+
+import org.icemobile.util.ClientDescriptor;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.text.ParsePosition;
@@ -73,9 +77,9 @@ public class TimeSpinnerTag extends SimpleTagSupport {
 
         PageContext pageContext = (PageContext) getJspContext();
         Writer out = pageContext.getOut();
-        ServletRequest sr = pageContext.getRequest();
         if (tu == null) tu = new TagUtil();
-        if (useNative && tu.useNative(pageContext)) {
+        ClientDescriptor client = ClientDescriptor.getInstance((HttpServletRequest)pageContext.getRequest());
+        if (useNative && client.isHasNativeDatePicker()) {
             out.write(tu.INPUT_TAG);
             tu.writeAttribute(out, "type", "time");
             tu.writeAttribute(out, "id", id);
@@ -103,6 +107,12 @@ public class TimeSpinnerTag extends SimpleTagSupport {
             }
             if (readOnly) {
                 tu.writeAttribute(out, "readonly", "true");
+            }
+            if( !tu.isValueBlank(style)){
+                tu.writeAttribute(out, "style", style);
+            }
+            if( !tu.isValueBlank(styleClass)){
+                tu.writeAttribute(out, "class", styleClass);
             }
             out.write(">" + tu.INPUT_TAG_END);
         } else {
@@ -205,7 +215,7 @@ public class TimeSpinnerTag extends SimpleTagSupport {
         writer.write(tu.DIV_TAG);                          //button container for set or cancel
         tu.writeAttribute(writer, "class", "mobi-time-submit-container");
         writer.write(">" + tu.INPUT_TAG);
-        tu.writeAttribute(writer, "class", "mobi-button");
+        tu.writeAttribute(writer, "class", "mobi-button ui-btn-up-a");
         tu.writeAttribute(writer, "type", "button");
         tu.writeAttribute(writer, "value", "Set");
 
@@ -222,7 +232,7 @@ public class TimeSpinnerTag extends SimpleTagSupport {
         writer.write(">" + tu.INPUT_TAG_END);
 
         writer.write(tu.INPUT_TAG);
-        tu.writeAttribute(writer, "class", "mobi-button");
+        tu.writeAttribute(writer, "class", "mobi-button ui-btn-up-a");
         tu.writeAttribute(writer, "type", "button");
         tu.writeAttribute(writer, "value", "Cancel");
         tu.writeAttribute(writer, CLICK_EVENT, "ice.mobi.timespinner.close('" + id + "');");
@@ -236,6 +246,7 @@ public class TimeSpinnerTag extends SimpleTagSupport {
         //separate the value into yrInt, mthInt, timeInt for now just use contstants
         writer.write(tu.SPAN_TAG);
         tu.writeAttribute(writer, "id", id + "_script");
+        tu.writeAttribute(writer, "class", "mobi-hidden");
         writer.write(">" + tu.SCRIPT_TAG);
         tu.writeAttribute(writer, "text", "text/javascript");
         writer.write(">ice.mobi.timespinner.init('" + id + "'," + hourInt + ","

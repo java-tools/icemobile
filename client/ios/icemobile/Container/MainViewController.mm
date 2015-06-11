@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@
 @implementation MainViewController
 
 @synthesize webView;
+@synthesize uploadProgress;
 @synthesize receivedData;
 @synthesize currentRequest;
 @synthesize currentResponse;
@@ -45,6 +46,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.uploadProgress.hidden = YES;
     self.webView.mediaPlaybackRequiresUserAction = NO;
     self.webView.allowsInlineMediaPlayback = YES;
 
@@ -284,7 +286,22 @@ NSLog(@"Warning: register should not be invoked with ICEmobile Container");
 NSLog(@"ICEmobile Container setProgress %d", percent);
     NSString *scriptTemplate = @"ice.progress(%d);";
     NSString *script = [NSString stringWithFormat:scriptTemplate, percent];
-    [self.webView stringByEvaluatingJavaScriptFromString: script];
+    NSString *result = [self.webView 
+        stringByEvaluatingJavaScriptFromString: script];
+    if ([@"false" isEqualToString:result])  {
+        self.uploadProgress.hidden = NO;
+        self.uploadProgress.alpha = 0.8;
+        self.uploadProgress.progress = percent / 100.0;
+        if (100 == percent)  {
+            [UIView animateWithDuration:0.5
+                animations:^ { self.uploadProgress.alpha = 0.0; }
+                completion:^(BOOL finished) 
+                        { self.uploadProgress.hidden = YES; }];
+        }
+    }
+}
+
+- (void) setProgressLabel:(NSString *) labelText {
 }
 
 - (NSString *) getFormData:(NSString *)formID  {

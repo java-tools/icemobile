@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -26,12 +26,11 @@ public class CSSUtils {
     public static final String HIDDEN = "ui-screen-hidden";
     
     /* Mobi Style Classes */
-    public static final String STYLECLASS_BUTTON = "mobi-button";
+    public static final String STYLECLASS_BUTTON = "mobi-button ui-btn-up-c";
     public static final String STYLECLASS_BUTTON_DISABLED = " mobi-button-dis";
     public static final String STYLECLASS_BUTTON_ATTENTION = "mobi-button-attention";
     public static final String STYLECLASS_BUTTON_IMPORTANT = "mobi-button-important";
     public static final String STYLECLASS_BUTTON_BACK = "mobi-button-back";
-    public static final String STYLECLASS_TAP_HIGHLIGHT = "mobi-tap-highlight";
     
     /* jQuery Mobile Classes */
     public static final String STYLECLASS_DISABLED = "ui-disabled";
@@ -47,8 +46,15 @@ public class CSSUtils {
     public static final String STYLECLASS_COLLAPSIBLEHEADINGTOGGLE = "ui-collapsible-heading-toggle";
        //div
     public static final String STYLECLASS_COLLAPSIBLECONTENT = "ui-collapsible-content";
+    /* Bar */
+    public static final String STYLECLASS_BAR_A = "ui-bar-a"; //default for headers, footers
+    public static final String STYLECLASS_BAR_B = "ui-bar-b"; //default for list group headers
     
-    public enum Theme{ IPAD, IPHONE, BBERRY, ANDROID, HONEYCOMB, ARCHAIC;
+    /* globals */
+    public static final String STYLECLASS_ACTIVE = "ui-btn-active";
+    
+        
+    public enum Theme{ BASE, IPAD, IPHONE, BBERRY, ANDROID, HONEYCOMB, ARCHAIC, ANDROID_LIGHT, ANDROID_DARK, BB10, JQM;
         public String fileName(){
             return this.name().toLowerCase();
         }
@@ -98,16 +104,14 @@ public class CSSUtils {
             view = client.isHandheldBrowser() ? View.SMALL : View.LARGE;
         }
         
-        if (client.isBlackBerryOS()) {
+        if (client.isBlackBerry10OS()) {
+            theme = Theme.BB10;
+        }
+        else if (client.isBlackBerryOS()) {
             theme = Theme.BBERRY;
         } 
         else if (client.isAndroidOS()) {
-            if (view == View.SMALL) {
-                theme = Theme.ANDROID;
-            }
-            else if( view == View.LARGE ){
-                theme = Theme.HONEYCOMB;
-            }
+            theme = Theme.ANDROID_LIGHT;
         } 
         else if (client.isIOS()) {
             if (view == View.SMALL) {
@@ -121,7 +125,7 @@ public class CSSUtils {
             theme = Theme.ARCHAIC;
         }
         else{
-            theme = Theme.IPAD; //default for all others
+            theme = Theme.ANDROID_LIGHT; //default for all others
         }
         return theme;
     }

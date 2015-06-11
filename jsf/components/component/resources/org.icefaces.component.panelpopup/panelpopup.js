@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -87,13 +87,9 @@
                     centerCalculation[clientId] = function () {
                         ice.mobi.panelCenter(containerId, centerCfg);
                     };
-                    if (window.addEventListener) {
-                        window.addEventListener(scrollEvent, centerCalculation[clientId], false);
-                        window.addEventListener('resize', centerCalculation[clientId], false);
-                    } else { // older ie event listener
-                        window.attachEvent(scrollEvent, centerCalculation[clientId]);
-                        window.attachEvent("resize", centerCalculation[clientId]);
-                    }
+                    ice.mobi.addListener(window, scrollEvent, centerCalculation[clientId]);
+                    ice.mobi.addListener(window, 'resize', centerCalculation[clientId]);
+
                     // calculate center for first view
                     ice.mobi.panelCenter(containerId, centerCfg);
                 }  else{

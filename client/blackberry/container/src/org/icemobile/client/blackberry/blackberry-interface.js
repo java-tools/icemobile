@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -207,8 +207,10 @@ if (!window.ice.mobile) {
                 }
             }
 
+            context.source = source;
             context.sourceid = sourceId;
             context.formid = formId;
+            context.element = element;
             context.onevent = options.onevent;
             context.onerror = options.onerror;
             //context.serialized = ice.serialize(form.id);
@@ -243,17 +245,9 @@ if (!window.ice.mobile) {
                 var parser = new DOMParser();
                 var xmlDoc = parser.parseFromString(unescape(data), "text/xml");
 
-                if (isSimulator) {
-                    icefaces.logInContainer("handleResponse - response Parsed");
-                }
                 jsfResponse.responseXML = xmlDoc;
-                if (isSimulator) {
-                    icefaces.logInContainer("handleResponse - Response set in jsfResponse");
-                }
                 jsf.ajax.response(jsfResponse, context);
-                if (isSimulator) {
-                    icefaces.logInContainer("handleResponse - Response processed!");
-                }
+
                 var form = document.getElementById(context.formid);
 
                 if (form != null) {
@@ -262,12 +256,11 @@ if (!window.ice.mobile) {
                         form.removeChild(tempInputs[i]);
                     }
                 }
-                if (isSimulator) {
-                    icefaces.logInContainer("Done inputs, clearing locals");
-                }
+                context.source = null;
                 context.sourceid = "";
                 context.formid = "";
                 context.serialized = "";
+                context.element = null;
                 context.onevent = null;
                 context.onerror = null;
             } catch (e) {
@@ -396,4 +389,5 @@ if (!window.ice.mobile) {
     init();
 
 }
+
 

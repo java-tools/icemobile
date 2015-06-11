@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -24,14 +24,15 @@ import java.io.Writer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.logging.Logger;
+import org.icemobile.util.CSSUtils;
 
 /**
  *
  */
 public class ListItemTag extends TagSupport {
 
-    public static final String OUTPUTLISTITEM_CLASS = "mobi-list-item";
-    public static final String OUTPUTLISTGROUP_CLASS = "mobi-list-item mobi-list-item-group";
+    public static final String OUTPUTLISTITEM_CLASS = "mobi-list-item ui-li";
+    public static final String OUTPUTLISTGROUP_CLASS = "mobi-list-item mobi-list-item-group ui-li-divider ui-bar-b ";
     public static final String OUTPUTLISTITEMDEFAULT_CLASS = "mobi-list-item-default ";
 
     private static Logger LOG = Logger.getLogger(OutputListTag.class.getName());

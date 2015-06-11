@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -17,8 +17,10 @@ package org.icefaces.mobi.component.inputText;
 
 import org.icefaces.mobi.renderkit.BaseInputRenderer;
 import org.icefaces.mobi.utils.HTML;
+import org.icefaces.mobi.utils.MobiJSFUtils;
 import org.icefaces.mobi.utils.PassThruAttributeWriter;
 import org.icefaces.render.MandatoryResourceComponent;
+import org.icemobile.util.ClientDescriptor;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -51,8 +53,8 @@ public class InputTextRenderer extends BaseInputRenderer {
                 return;
             }
             this.setSubmittedValue(inputText, submittedString);
+            decodeBehaviors(facesContext, inputText);
         }
-        decodeBehaviors(facesContext, inputText);
     }
 
 
@@ -61,6 +63,16 @@ public class InputTextRenderer extends BaseInputRenderer {
         String clientId = uiComponent.getClientId(facesContext);
         ResponseWriter writer = facesContext.getResponseWriter();
         InputText inputText = (InputText) uiComponent;
+        
+        String label = inputText.getLabel();
+        if( label != null ){
+            writer.startElement(HTML.LABEL_ELEM, null);
+            writer.writeAttribute(HTML.ID_ATTR, inputText.getClientId()+"_lbl", null);
+            writer.writeAttribute(HTML.FOR_ATTR, inputText.getClientId(), null);
+            writer.writeAttribute(HTML.CLASS_ATTR, "ui-input-text", null);
+            writer.writeText(label, null);
+            writer.endElement(HTML.LABEL_ATTR);
+        }
 
         String type = inputText.validateType(inputText.getType());
         String componentType = "input";
@@ -77,7 +89,7 @@ public class InputTextRenderer extends BaseInputRenderer {
         writer.writeAttribute(HTML.ID_ATTR, compId, HTML.ID_ATTR);
         writer.writeAttribute(HTML.NAME_ATTR, compId, null);
 
-        StringBuilder baseClass = new StringBuilder("mobi-input-text");
+        StringBuilder baseClass = new StringBuilder("mobi-input-text ui-input-text");
         String styleClass = inputText.getStyleClass();
         if (styleClass != null) {
             baseClass.append(" ").append(styleClass);
@@ -98,6 +110,12 @@ public class InputTextRenderer extends BaseInputRenderer {
         } else if (isNumberType) {
             PassThruAttributeWriter.renderNonBooleanAttributes(writer, uiComponent, inputText.getNumberAttributeNames());
         } else {
+            ClientDescriptor client = MobiJSFUtils.getClientDescriptor();
+            String typeVal = (String)uiComponent.getAttributes().get("type");
+            if( isDateType && client.isAndroidOS() && client.isICEmobileContainer() ){ //Android container borks date types
+                typeVal = "text";
+            }
+            writer.writeAttribute("type", typeVal, null);
             PassThruAttributeWriter.renderNonBooleanAttributes(writer, uiComponent, inputText.getInputtextAttributeNames());
         }
         if (!isDateType) writer.writeAttribute("autocorrect", "off", null);
@@ -123,7 +141,7 @@ public class InputTextRenderer extends BaseInputRenderer {
         boolean hasBehaviors = !cbh.getClientBehaviors().isEmpty();
 
         if (!disabled && !readOnly && hasBehaviors){
-              String cbhCall = this.buildAjaxRequest(facesContext, cbh, event);
+              String cbhCall = "ice.setFocus(null); " + this.buildAjaxRequest(facesContext, cbh, event);
               writer.writeAttribute(event, cbhCall, null);
         }
         else if (inputText.isSingleSubmit()){
@@ -132,6 +150,4 @@ public class InputTextRenderer extends BaseInputRenderer {
         }
         writer.endElement(componentType);
     }
-
-
 }

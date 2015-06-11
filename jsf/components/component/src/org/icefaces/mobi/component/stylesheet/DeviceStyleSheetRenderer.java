@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -65,10 +65,6 @@ public class DeviceStyleSheetRenderer extends Renderer implements javax.faces.ev
     public static final String IPHONE_CSS = "iphone.css";
     // iPad style sheet name found in jar.
     public static final String IPAD_CSS = "ipad.css";
-    // Android style sheet name found in jar.
-    public static final String ANDROID_CSS = "android.css";
-    // Android honeycomb style sheet name found in jar.
-    public static final String HONEYCOMB_CSS = "honeycomb.css";
     // Blackberry style sheet name found in jar.
     public static final String BBERRY_CSS = "bberry.css";
 
@@ -80,7 +76,7 @@ public class DeviceStyleSheetRenderer extends Renderer implements javax.faces.ev
 
     // default resource library for a default themes,  if not specified in
     // component definition this library will be loaded.
-    private static final String DEFAULT_LIBRARY = "org.icefaces.component.skins";
+  //  private static final String DEFAULT_LIBRARY = "org.icefaces.component.skins";
     // url of a resource that could not be resolved, danger Will Robertson.
     public static final String RESOURCE_URL_ERROR = "RES_NOT_FOUND";
     // key to store if algorithm to detect device type has run. If a device
@@ -101,25 +97,6 @@ public class DeviceStyleSheetRenderer extends Renderer implements javax.faces.ev
         Map contextMap = context.getAttributes();
         Map attributes = uiComponent.getAttributes();
         DeviceStyleSheet stylesheet = (DeviceStyleSheet) uiComponent;
-
-        /**
-         * The component has three modes in which it executes.
-         * 1.) no attributes - then component tries to detect a mobile device
-         *     in from the user-agent.  If a mobile device is discovered, then
-         *     it will fall into three possible matches, iphone, ipad,  android and
-         *     blackberry.  If the mobile device is not not know then ipad
-         *     is loaded. Library is always assumed to be DEFAULT_LIBRARY.
-         *
-         * 2.) name attribute - component will default to using a library name
-         *     of DEFAULT_LIBRARY.  The name attribute specifies one of the
-         *     possible device themes; iphone.css, android.css or bberry.css.
-         *     Error will result if named resource could not be resolved.
-         *
-         * 3.) name and libraries attributes. - component will use the library
-         *     and name specified by the user.  Component is fully manual in this
-         *     mode. Error will result if name and library can not generate a
-         *     value resource.
-         */
         String name = (String)uiComponent.getAttributes().get("name");
         String view = (String)uiComponent.getAttributes().get("view");
         if( name == null || "".equals(name)){
@@ -163,7 +140,7 @@ public class DeviceStyleSheetRenderer extends Renderer implements javax.faces.ev
     private String deriveLibrary(Map attributes){
     	String library = (String) attributes.get(HTML.LIBRARY_ATTR);
         if( library == null ){
-        	library = DEFAULT_LIBRARY;
+        	library = DeviceStyleSheet.DEFAULT_LIBRARY;
         }
     	return library;
     }

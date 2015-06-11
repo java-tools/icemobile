@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -66,12 +66,14 @@ public class VideoCaptureRenderer extends BaseInputResourceRenderer {
     public void encodeEnd(FacesContext facesContext, UIComponent uiComponent)
             throws IOException {
         VideoCapture camcorder = (VideoCapture) uiComponent;
+        String oldLabel = camcorder.getButtonLabel();
         if (MobiJSFUtils.uploadInProgress(camcorder))  {
             camcorder.setButtonLabel(camcorder.getCaptureMessageLabel()) ;
-        }
+        } 
         DeviceCoreRenderer renderer = new DeviceCoreRenderer();
         ResponseWriterWrapper writer = new ResponseWriterWrapper(facesContext.getResponseWriter());
         renderer.encode(camcorder, writer, false);
+        camcorder.setButtonLabel(oldLabel);
 
  /*       boolean isEnhanced =  cd.isICEmobileContainer()  || cd.isSXRegistered() ;
         boolean isAuxUpload = EnvUtils.isAuxUploadBrowser(facesContext);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -24,7 +24,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.annotation.MultipartConfig;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @MultipartConfig
@@ -40,7 +39,14 @@ public class MultipartFacesServlet extends HttpServlet {
         ServletContext servletContext = request.getServletContext();
         RequestDispatcher facesDispatcher = servletContext
                 .getNamedDispatcher("Faces Servlet");
-        facesDispatcher.forward(request, response);
+        if( null == facesDispatcher ){
+            throw new ServletException("Missing Faces Servlet. Please configure the Faces " +
+                    "Servlet in the web.xml for use with the ICEmobile " +
+                    "MultipartFacesServlet.");
+        }
+        else{
+            facesDispatcher.forward(request, response);
+        }
     }
 
 }

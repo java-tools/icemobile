@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -59,13 +59,12 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
     public static final String META_CONTENTTYPE = "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>";
     public static final String META_VIEWPORT = "<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'/>";
     public static final String META_IOS_WEBAPPCAPABLE = "<meta name='apple-mobile-web-app-capable' content='yes'/>";
-    public static final String META_IOS_APPSTATUSBAR = "<meta name='apple-mobile-web-app-status-bar-style' content='black'>";
+    public static final String META_IOS_APPSTATUSBAR = "<meta name='apple-mobile-web-app-status-bar-style' content='black'/>";
     public static final String META_IOS_SMARTAPPBANNER = "<meta name='apple-itunes-app' content=\"app-id=%s, app-argument=%s\"/>";
     
     public static final String LINK_SHORTCUT_ICON = "<link href='%s/resources/images/favicon.ico' rel='shortcut icon' type='image/x-icon'/>";
     public static final String LINK_FAV_ICON = "<link href='%s/resources/images/favicon.ico' rel='icon' type='image/x-icon'/>";
     
-    public static final String SCRIPT_ICEPUSH = "<script type='text/javascript' src='code.icepush'></script>";
     public static final String SCRIPT_ICEMOBILE = "<script type='text/javascript' src='%s%s/javascript/icemobile.js'></script>";
 	public static final String SCRIPT_SIMULATOR = "simulator-interface.js";
 	public static final String CSS_SIMULATOR = "simulator.css";
@@ -128,12 +127,31 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
             String targetView = (String)comp.getAttributes().get("view");
             theme = CSSUtils.deriveTheme(targetView, JSFUtils.getRequest());
         }
+        //android and honeycomb themes deprecated
+        if( theme == Theme.ANDROID || theme == Theme.HONEYCOMB ){
+            theme = Theme.ANDROID_DARK;
+        }
         writeOutDeviceStyleSheets(context,comp,theme);
+
+        if (client.isAndroid2OS()) {
+            writeOverthrow(context);
+        }
+
         if (isSimulated)  {
             writeSimulatorResources(context, comp, theme);
         }
-        encodeThemeMarker(writer,theme);
+        encodeMarkers(writer,theme, client);
 
+    }
+
+    private void writeOverthrow(FacesContext context) throws IOException {
+        Resource ot = context.getApplication().getResourceHandler().createResource("overthrow.js", UTIL_RESOURCE);
+        String src = ot.getRequestPath();
+        ResponseWriter writer = context.getResponseWriter();
+        writer.startElement("script", null);
+        writer.writeAttribute("type", "text/javascript", null);
+        writer.writeAttribute("src", src, null);
+        writer.endElement("script");
     }
 
     private boolean isNeedAppBanner(FacesContext facesContext, 
@@ -170,7 +188,7 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
         
         String library = deriveLibrary( facesContext.getAttributes());
         Resource resource = facesContext.getApplication().getResourceHandler()
-                .createResource(cssFile, library);
+                .createResource(cssFile, library, "text/css");
         String resourceUrl = RESOURCE_URL_ERROR;
         if (resource != null) {
             resourceUrl = facesContext.getExternalContext().encodeResourceURL(resource.getRequestPath());
@@ -194,7 +212,7 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
 
         Resource simulatorCss = facesContext.getApplication()
             .getResourceHandler().createResource(
-                CSS_SIMULATOR, UTIL_RESOURCE );
+                CSS_SIMULATOR, CSS_LOCATION, "text/css");
         writer.startElement(HTML.LINK_ELEM, component);
         writer.writeAttribute(HTML.TYPE_ATTR, HTML.LINK_TYPE_TEXT_CSS,
                 HTML.TYPE_ATTR);
@@ -220,13 +238,22 @@ public class DeviceResourceRenderer  extends Renderer implements javax.faces.eve
         writer.endElement("script");
     }
 
-    public void encodeThemeMarker(ResponseWriter writer, Theme theme) throws IOException {
+    public void encodeMarkers(ResponseWriter writer, Theme theme, ClientDescriptor client) throws IOException {
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
-        writer.writeText(String.format("document.documentElement.className == '' ? " +
-        		"document.documentElement.className = '%1$s' : " +
-        		"document.documentElement.className = document.documentElement.className+' %1$s';", 
-        		theme.fileName()),null);
+        String markers = " " + theme.fileName() + " ui-mobile";
+        if( client.isIE10Browser() ){
+            markers += " ie10";
+        }
+        if( client.isAndroidBrowserOrWebView()){
+            markers += " android-browser";
+        }
+        if( client.isDesktopBrowser()){
+            markers += " desktop";
+        }
+        writer.writeText("document.documentElement.className = document.documentElement.className+'" 
+                + markers + "'; if (window.addEventListener) window.addEventListener('load', function() {document.body.className = 'ui-body-c';});", null);
+        
         writer.endElement("script");
     }
     

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -110,7 +110,7 @@ public class FragmentTag extends BaseBodyTag implements IFragment{
 
     public void release(){
         super.release();
-        LOG.info("release Fragment");
+        LOG.finest("release Fragment");
         this.writer= null;
         this.renderer=null;
     }

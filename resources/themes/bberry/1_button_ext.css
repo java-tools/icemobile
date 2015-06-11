@@ -1,5 +1,5 @@
-/***
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+/*
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -22,7 +22,7 @@
     color: #FFFFFF;
     text-shadow: 0 -1px 1px #145072;
 }
-.mobi-button {
+.mobi-button, a.mobi-button:visited {
     background: -moz-linear-gradient(top, #E7EBE7, #ccc) repeat scroll 0 0 #ccc;
     background-image: -webkit-gradient(linear, 0 0, 0 100%, color-stop(0, #E7EBE7), color-stop(1, #ccc));
     background-color: #ccc;
@@ -41,6 +41,15 @@
     padding: 0.6em 20px;
     text-shadow: 1px 1px 1px #FFF;
 }
-.mobi-pagePanel-header .mobi-button-back{
-    left: 0.5em;
+.mobi-button-placeholder{
+    padding-left: 2em;
+}
+.mobi-button-back input{
+	left: 0;
+}
+.mobi-pagePanel-header div.mobi-button-back {
+    min-width: 14px;
+}
+div.mobi-button-back > input{
+    left: 3px;
 }

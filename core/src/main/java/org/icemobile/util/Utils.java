@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -52,6 +52,8 @@ public class Utils {
             put("image/png", ".png");
         }
     };
+    
+    private static final String DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
 
     public static final Map<String, String> CONTENT_TYPE_BY_FILE_EXT = new HashMap<String, String>() {
         {
@@ -71,9 +73,6 @@ public class Utils {
         }
     };
 
-    public static final DateFormat HTTP_DATE = new SimpleDateFormat(
-            "EEE, dd MMM yyyy HH:mm:ss zzz", Locale.ENGLISH);
-
     public static Cookie getCookie(String name, HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
@@ -88,14 +87,17 @@ public class Utils {
 
     public static void copyStream(InputStream in, OutputStream out)
             throws IOException {
-        byte[] buf = new byte[1000];
-        int l = 1;
-        while (l > 0) {
-            l = in.read(buf);
-            if (l > 0) {
-                out.write(buf, 0, l);
+        if( in != null && out != null ){
+            byte[] buf = new byte[1000];
+            int l = 1;
+            while (l > 0) {
+                l = in.read(buf);
+                if (l > 0) {
+                    out.write(buf, 0, l);
+                }
             }
         }
+        
     }
 
     public static int copyStream(InputStream in, OutputStream out, int start,
@@ -205,6 +207,10 @@ public class Utils {
             hashCode = value.toString().hashCode();
         }
         return hashCode;
+    }
+    
+    public static DateFormat getHttpDateFormat(){
+        return new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
     }
 
 }

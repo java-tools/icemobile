@@ -1,3 +1,19 @@
+/*
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an "AS
+ * IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language
+ * governing permissions and limitations under the License.
+ */
+
 if (!window['mobi']) {
     window.mobi = {};
 }
@@ -39,15 +55,8 @@ ice.mobi.splitpane = {
                 rightNode.style.width = (100 - width) + "%";
             }
         }
-        /*    var supportsOrientationChange = "onorientationchange" in window,
-         orientationEvent = supportsOrientationChange ? "orientationchange" : "resize"; */
-        if (window.addEventListener) {
-            //    window.addEventListener(orientationEvent, resizeCall, false);
-            window.addEventListener('resize', resizeCall, false);
-        } else { // older ie event listener
-            //   window.attachEvent(orientationEvent, resizeCall, false);
-            window.attachEvent("resize", resizeCall, false);
-        }
+        ice.mobi.addListener(window, 'resize', resizeCall);
+
         return {
             resize: function(elId) {
                 var height = 0;
@@ -67,18 +76,19 @@ ice.mobi.splitpane = {
                         }
                     }
                     if (height > 0) {
-                        leftNode.style.height = ((height - leftNode.offsetTop) + "px");
-                        rtNode.style.height = ((height - rtNode.offsetTop) + "px");
+                        var leftHeight = height - leftNode.offsetTop;
+                        var rightHeight = height - rtNode.offsetTop;
+                        if( leftHeight > 0 ){
+                            leftNode.style.height = "" + leftHeight + "px";
+                        }
+                        if( rightHeight > 0 ){
+                            rtNode.style.height = "" + rightHeight + "px";
+                        }
                     }
                 }
             },
             unload: function() {
-                //remove listeners and set object back to empty
-                if (window.addEventListener) {
-                    window.removeEventListener("resize", resizeCall, false);
-                } else {
-                    window.detachEvent("resize", resizeCall, false);
-                }
+                ice.mobi.removeListener(window, "resize", resizeCall);
             }
         }
     }

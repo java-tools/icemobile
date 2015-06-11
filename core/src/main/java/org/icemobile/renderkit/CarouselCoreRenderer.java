@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,9 +16,11 @@
 
 package org.icemobile.renderkit;
 
+import org.icemobile.component.IButton;
 import org.icemobile.util.Constants;
 import org.icemobile.component.ICarousel;
 import org.icemobile.util.ClientDescriptor;
+import org.icemobile.util.CSSUtils;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -30,12 +32,13 @@ public class CarouselCoreRenderer extends BaseCoreRenderer {
             Logger.getLogger(CarouselCoreRenderer.class.toString());
 
     StringBuilder baseClass = new StringBuilder(ICarousel.CAROUSEL_CLASS);
-    StringBuilder scrollerClass = new StringBuilder(ICarousel.SCROLLER_CLASS) ;
+    StringBuilder scrollerClass = new StringBuilder(ICarousel.SCROLLER_CLASS);
     StringBuilder listClass = new StringBuilder(ICarousel.LIST_CLASS) ;
     StringBuilder pagClass = new StringBuilder("") ; //currently a problem with existing css
 
     public void encodeBegin(ICarousel component, IResponseWriter writer)
             throws IOException {
+
         String userDefinedClass = component.getStyleClass();
         if (userDefinedClass!=null){
             baseClass.append(" ").append(userDefinedClass);
@@ -46,7 +49,7 @@ public class CarouselCoreRenderer extends BaseCoreRenderer {
         String clientId = component.getClientId();
         writer.startElement(DIV_ELEM, component);
         writer.writeAttribute(ID_ATTR, clientId);
-        writer.writeAttribute(NAME_ATTR, clientId);
+        writer.writeAttribute(STYLE_ATTR, "overflow-x: hidden");
         writer.startElement(DIV_ELEM, component);
         writer.writeAttribute(ID_ATTR, clientId+"_carousel");
         writeStandardLayoutAttributes(writer, component, baseClass.toString() );
@@ -69,15 +72,15 @@ public class CarouselCoreRenderer extends BaseCoreRenderer {
         writer.startElement(DIV_ELEM, carousel);
         writer.writeAttribute(ID_ATTR, clientId+"_dots");
         Object prevLabel = carousel.getPreviousLabel();
-        if (prevLabel !=null){
+        if (prevLabel !=null && !prevLabel.toString().equals("null") && prevLabel.toString().length()>0){
             renderPagination( carousel, writer, String.valueOf(prevLabel),clientId, "prev" );
         }
         Object nextLabel = carousel.getNextLabel();
-        if (nextLabel !=null ){
+        if (nextLabel !=null && !nextLabel.toString().equals("null") && nextLabel.toString().length()>0){
             renderPagination(carousel, writer, String.valueOf(nextLabel),clientId, "next" );
         }
         writer.startElement(DIV_ELEM, carousel);
-        writer.writeAttribute("class", ICarousel.CAROUSEL_CURSOR_CLASS);
+        writer.writeAttribute("class", ICarousel.CAROUSEL_CURSOR_CLASS + " " + CSSUtils.STYLECLASS_BAR_B);
         writer.writeAttribute("style", carousel.getStyle());
         writer.startElement(DIV_ELEM, carousel);
         writer.writeAttribute("class", ICarousel.CAROUSEL_CURSOR_CURSOR_CENTER_CLASS);
@@ -113,42 +116,22 @@ public class CarouselCoreRenderer extends BaseCoreRenderer {
         ClientDescriptor cd = carousel.getClient();
         String eventStr = isTouchEventEnabled(cd) ?
                 Constants.TOUCH_START_EVENT : Constants.CLICK_EVENT;
-        writer.startElement(DIV_ELEM, carousel);
+        writer.startElement(INPUT_ELEM, carousel);
+        writer.writeAttribute(TYPE_ATTR, "button");
+        writer.writeAttribute(CLASS_ATTR, IButton.BUTTON_DEFAULT);
+        if (ind.equals("next")){
+            writer.writeAttribute(STYLE_ATTR, "float: right;");
+        }
         writer.writeAttribute(ID_ATTR, id+"_"+ind);
         StringBuilder prevBuilder = new StringBuilder(call).append(id).append("', '").append(ind).append("'); return false");
         writer.writeAttribute(eventStr, prevBuilder.toString());
-        writer.writeText(value);
-        writer.endElement(DIV_ELEM);
+        writer.writeAttribute(VALUE_ATTR, value);
+        writer.endElement(INPUT_ELEM);
     }
     public void encodeIScrollLib(ICarousel carousel, IResponseWriter writer)
             throws IOException{
         String src = carousel.getIScrollSrc();
-        String clientId = carousel.getClientId();
-        writer.startElement(SPAN_ELEM, carousel);
-        writer.writeAttribute(ID_ATTR, clientId+"_libIScr");
-        writer.startElement("script", carousel);
-        writer.writeAttribute("text", "text/javascript");
-        writer.writeAttribute("src", src);
-        writer.endElement("script");
-        writer.endElement(SPAN_ELEM);
-    }
-
-    /**
-     * differs from version in BaseCoreRenderer in that it provides an index to the javascript
-     * for update
-     * @param writer
-     * @param id
-     * @param selectedIndex
-     * @throws IOException
-     */
-    private void encodeHiddenSelected(IResponseWriter writer, String id, int selectedIndex,
-                                      String name) throws IOException {
-        writer.startElement("input");
-        writer.writeAttribute("id", id + "_hidden");
-        writer.writeAttribute("name", name);
-        writer.writeAttribute("type", "hidden");
-        writer.writeAttribute("value", String.valueOf(selectedIndex));
-        writer.endElement("input");
+        super.writeExternalScript(carousel, writer, src);
     }
 
     /**
@@ -162,15 +145,16 @@ public class CarouselCoreRenderer extends BaseCoreRenderer {
         writer.startElement(SPAN_ELEM, carousel);
         String clientId= carousel.getClientId();
         writer.writeAttribute(ID_ATTR, clientId + "_script");
+        writer.writeAttribute(CLASS_ATTR, "mobi-hidden");
         writer.startElement(SCRIPT_ELEM, null);
-        writer.writeAttribute("text", "text/javascript");
+        writer.writeAttribute("type", "text/javascript");
         StringBuilder scriptSB = new StringBuilder("setTimeout(function () {ice.mobi.carousel.loaded('");
         scriptSB.append(clientId).append("'");
         StringBuilder cfg = carousel.getJSConfigOptions();
         if (null != cfg){
             scriptSB.append(cfg);
         }
-        scriptSB.append(");").append("}, 1);");
+        scriptSB.append(");").append("}, 100);");
         writer.writeText(scriptSB.toString());
        // logger.info("writing script to page -"+scriptSB.toString());
         writer.endElement(SCRIPT_ELEM);

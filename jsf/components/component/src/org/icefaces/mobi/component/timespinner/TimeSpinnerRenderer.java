@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,11 +16,14 @@
 
 package org.icefaces.mobi.component.timespinner;
 
+import static org.icemobile.util.HTML.CLASS_ATTR;
+
 import org.icefaces.mobi.renderkit.BaseInputRenderer;
 import org.icefaces.mobi.utils.HTML;
 import org.icefaces.mobi.utils.MobiJSFUtils;
 import org.icefaces.mobi.utils.PassThruAttributeWriter;
 import org.icefaces.mobi.utils.Utils;
+import org.icemobile.util.CSSUtils;
 import org.icemobile.util.ClientDescriptor;
 
 import javax.faces.component.UIComponent;
@@ -81,14 +84,13 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         spinner.setTouchEnabled(Utils.isTouchEventEnabled(context));
 
         if (shouldUseNative(spinner)) {
-            writer.startElement(HTML.SPAN_ELEM, component);
+            writer.startElement("input", component);
+            writer.writeAttribute("type", "time", "type");
+            writer.writeAttribute("id", clientId, null);
+            writer.writeAttribute("name", clientId, null);
             if (spinner.getStyle()!=null){
                 writer.writeAttribute(HTML.STYLE_ATTR, spinner.getStyle(), HTML.STYLE_ATTR);
             }
-            writer.startElement("input", component);
-            writer.writeAttribute("type", "time", "type");
-            writer.writeAttribute("id", clientId, "id");
-            writer.writeAttribute("name", clientId, "name");
             boolean disabled = spinner.isDisabled();
             boolean readonly = spinner.isReadonly();
             String defaultPattern = "HH:mm";
@@ -114,11 +116,10 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
                 String event = spinner.getDefaultEventName(context);
                 String cbhCall = this.buildAjaxRequest(context, cbh, event);
                 writer.writeAttribute("onblur", cbhCall, null);
-            } else if (singleSubmit) {
+            } else if (!readonly && !disabled && singleSubmit) {
                 writer.writeAttribute("onblur", "ice.se(event, this);", null);
             }
             writer.endElement("input");
-            writer.endElement(HTML.SPAN_ELEM);
         } else {
             writeJavascriptFile(context, component, JS_NAME, JS_MIN_NAME, JS_LIBRARY);
             String value = this.encodeValue(spinner, initialValue);
@@ -135,7 +136,12 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         ClientBehaviorHolder cbh = (ClientBehaviorHolder) uiComponent;
         String eventStr = timeEntry.isTouchEnabled() ?
                 TOUCH_START_EVENT : CLICK_EVENT;
-
+        boolean readonly = timeEntry.isReadonly();
+        boolean disabled = timeEntry.isDisabled();
+        boolean disabledOrReadonly = false;
+        if (readonly || disabled){
+            disabledOrReadonly = true;
+        }
         //first do the input field and the button
         // build out first input field
         writer.startElement(HTML.SPAN_ELEM, uiComponent);
@@ -160,9 +166,9 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
             writer.writeAttribute("value", value, null);
         }
         writer.writeAttribute("type", "text", "type");
-        if (timeEntry.isReadonly())
+        if (readonly)
             writer.writeAttribute("readonly", "readonly", null);
-        if (timeEntry.isDisabled())
+        if (disabled)
             writer.writeAttribute("disabled", "disabled", null);
         writer.endElement("input");
         writer.endElement("span");
@@ -173,7 +179,7 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         writer.writeAttribute("class", TimeSpinner.POP_UP_CLASS, null);
         if (timeEntry.isDisabled())
             writer.writeAttribute("disabled", "disabled", null);
-        else {
+        if (!disabledOrReadonly){
             // touch event can be problematic sometime not actualy getting called
             // for ui widgets that don't require rapid response then stick with onClick
             writer.writeAttribute(CLICK_EVENT, "mobi.timespinner.toggle('" + clientId + "');", null);
@@ -286,7 +292,7 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         writer.startElement("div", uiComponent);                          //button container for set or cancel
         writer.writeAttribute("class", "mobi-time-submit-container", null);
         writer.startElement("input", uiComponent);
-        writer.writeAttribute("class", "mobi-button", null);
+        writer.writeAttribute("class", CSSUtils.STYLECLASS_BUTTON, null);
         writer.writeAttribute("type", "button", "type");
         writer.writeAttribute("value", "Set", null);
         //prep for singleSubmit
@@ -306,7 +312,7 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         }
         writer.endElement("input");
         writer.startElement("input", uiComponent);
-        writer.writeAttribute("class", "mobi-button", null);
+        writer.writeAttribute("class", CSSUtils.STYLECLASS_BUTTON, null);
         writer.writeAttribute("type", "button", "type");
         writer.writeAttribute("value", "Cancel", null);
         writer.writeAttribute(CLICK_EVENT, "mobi.timespinner.close('" + clientId + "');", null);
@@ -327,6 +333,7 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
         int ampm = spinner.getAmpm();
         writer.startElement("span", uiComponent);
         writer.writeAttribute("id", clientId + "_script", "id");
+        writer.writeAttribute(CLASS_ATTR, "mobi-hidden", null);
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
         writer.write("mobi.timespinner.init('" + clientId + "'," + hourInt +
@@ -458,7 +465,7 @@ public class TimeSpinnerRenderer extends BaseInputRenderer {
     }
 
     private boolean shouldUseNative(TimeSpinner component) {
-       return component.isUseNative() && Utils.shouldUseNative();
+       return component.isUseNative() && MobiJSFUtils.getClientDescriptor().isHasNativeDatePicker();
     }
 
 }

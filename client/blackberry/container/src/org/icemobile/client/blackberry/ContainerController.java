@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -27,9 +27,9 @@ public interface ContainerController {
 
     // Application GUID
     // In Eclipse, type a string, select it and right click->"Convert String to Long"
-    // to create a unique GUID. Last value is "ICEmobileContainer 1.2 GA"
-    public final String PRODUCT_ID = "ICEmobileContainer 1.2 GA";
-    public final long GUID = 0x7431b7489db67f16L;
+    // to create a unique GUID. Last value is "ICEmobileContainer 1.3 Beta"
+    public final String PRODUCT_ID = "ICEmobileContainer 1.3 Beta";
+    public final long GUID = 0x474f3ee26aad77b2L;
     
     // Container navigation methods
     public void reloadCurrentPage();
@@ -171,6 +171,16 @@ public interface ContainerController {
      * @param hiddenArgument The value of the input field. 
      */
     public void insertHiddenFieldUntyped(final String id, final String hiddenArgument); 
+    
+    /**
+     * Exit the container 
+     */
+    public void shutdownContainer(); 
+    
+    /**
+     * Run a series of diagnostic checks on the javascript namespace defined in the BrowserField
+     */
+    public void testJavascriptNamespace();
     
   
 }

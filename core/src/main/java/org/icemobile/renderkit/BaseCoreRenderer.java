@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -18,6 +18,7 @@ package org.icemobile.renderkit;
 
 import java.io.IOException;
 
+import org.icemobile.component.IBaseComponent;
 import org.icemobile.component.IMobiComponent;
 import org.icemobile.util.ClientDescriptor;
 
@@ -52,7 +53,7 @@ public abstract class BaseCoreRenderer{
     }
 
     public void writeStandardLayoutAttributes(IResponseWriter writer,
-                    IMobiComponent component, String baseClass) throws IOException  {
+                    IBaseComponent component, String baseClass) throws IOException  {
         StringBuilder inputStyle = new StringBuilder(baseClass);
         if (null != component.getStyleClass())  {
             inputStyle.append(SPACE).append(component.getStyleClass());
@@ -64,7 +65,23 @@ public abstract class BaseCoreRenderer{
             writer.writeAttribute(STYLE_ATTR, component.getStyle());
         }
     }
-    
+    /**
+     * differs from writeHiddenInput in that it provides an index to the javascript
+     * for update  Used by carousel
+     * @param writer
+     * @param id
+     * @param selectedIndex
+     * @throws IOException
+     */
+    public void encodeHiddenSelected(IResponseWriter writer, String id, Object selectedIndex,
+                                      String name) throws IOException {
+        writer.startElement("input");
+        writer.writeAttribute("id", id + "_hidden");
+        writer.writeAttribute("name", name);
+        writer.writeAttribute("type", "hidden");
+        writer.writeAttribute("value", String.valueOf(selectedIndex));
+        writer.endElement("input");
+    }
     public void writeHiddenInput(IResponseWriter writer, IMobiComponent comp) throws IOException{
         writer.startElement(SPAN_ELEM, comp);
         writer.startElement(INPUT_ELEM, comp);
@@ -84,6 +101,24 @@ public abstract class BaseCoreRenderer{
         writer.endElement(INPUT_ELEM);
         writer.endElement(SPAN_ELEM);
     }
+    public void writeExternalScript(IMobiComponent component, IResponseWriter writer, String url)
+            throws IOException {
+        writeExternalScript(component, writer, url, true);
+    }
+    public void writeExternalScript(IMobiComponent component, IResponseWriter writer, String url, boolean required)
+            throws IOException {
+        
+            writer.startElement(SPAN_ELEM, null);
+            writer.writeAttribute(ID_ATTR, component.getClientId() +"_libJS");
+            writer.writeAttribute(CLASS_ATTR, "mobi-hidden");
+            if (required)  {
+                writer.startElement("script", null);
+                writer.writeAttribute("type", "text/javascript");
+                writer.writeAttribute("src", url);
+                writer.endElement("script");
+            }
+            writer.endElement(SPAN_ELEM);
+    }
     protected boolean isTouchEventEnabled(ClientDescriptor client) {
         // commenting out Blackberry at this time as support of touch events is
         // problematic
@@ -91,6 +126,19 @@ public abstract class BaseCoreRenderer{
         if (client.isAndroidOS() && client.isTabletBrowser())
             return false;
         if (client.isIOS() || client.isAndroidOS() ) { //assuming android phone
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isStringAttributeEmpty(String inString){
+        if (inString==null){
+            return true;
+        }
+        if (inString.trim().equals("")) {
+            return true;
+        }
+        if (inString.length()<1){
             return true;
         }
         return false;

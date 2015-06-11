@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -19,6 +19,7 @@ package org.icemobile.renderkit;
 import java.io.IOException;
 
 import org.icemobile.component.IDevice;
+import org.icemobile.util.CSSUtils;
 import org.icemobile.util.ClientDescriptor;
 
 import java.lang.StringBuilder;
@@ -33,7 +34,7 @@ public class DeviceCoreRenderer extends BaseCoreRenderer{
     public void encode(IDevice component, IResponseWriter writer, boolean isJSP)
             throws IOException {
         String clientId = component.getClientId();
-        StringBuilder baseClass = new StringBuilder(IDevice.CSS_CLASS);
+        StringBuilder baseClass = new StringBuilder(CSSUtils.STYLECLASS_BUTTON);
         String comptype = component.getComponentType();
         ClientDescriptor cd = component.getClient();
         boolean isEnhanced = cd.isICEmobileContainer()  || cd.isSXRegistered();
@@ -82,6 +83,7 @@ public class DeviceCoreRenderer extends BaseCoreRenderer{
             writer.startElement(INPUT_ELEM, component);
             if (comptype.equals("scan") || comptype.equals("aug")){
                 writer.writeAttribute(TYPE_ATTR, INPUT_TYPE_TEXT);
+                writer.writeAttribute(CLASS_ATTR, "mobi-input-text ui-input-text");
             }else {
                 writer.writeAttribute(TYPE_ATTR, INPUT_TYPE_FILE);
             }

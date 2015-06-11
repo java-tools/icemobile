@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -16,10 +16,14 @@
 
 package org.icefaces.mobi.component.datespinner;
 
+import static org.icemobile.util.HTML.CLASS_ATTR;
+
 import org.icefaces.mobi.renderkit.BaseInputRenderer;
+import org.icefaces.mobi.utils.MobiJSFUtils;
 import org.icefaces.mobi.utils.PassThruAttributeWriter;
 import org.icefaces.mobi.utils.Utils;
 import org.icefaces.mobi.utils.HTML;
+import org.icemobile.util.CSSUtils;
 
 import javax.faces.component.UIComponent;
 import javax.faces.component.behavior.ClientBehaviorHolder;
@@ -85,14 +89,13 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         String initialValue = getStringValueToRender(context, component);
         // detect if an iOS device
         if (shouldUseNative(spinner)) {
-            writer.startElement(HTML.SPAN_ELEM, component);
+            writer.startElement("input", component);
+            writer.writeAttribute("type", "date", "type");
+            writer.writeAttribute("id", clientId, null);
+            writer.writeAttribute("name", clientId, null);
             if (spinner.getStyle()!=null){
                 writer.writeAttribute(HTML.STYLE_ATTR, spinner.getStyle(), HTML.STYLE_ATTR);
             }
-            writer.startElement("input", component);
-            writer.writeAttribute("type", "date", "type");
-            writer.writeAttribute("id", clientId, "id");
-            writer.writeAttribute("name", clientId, "name");
             boolean disabled = spinner.isDisabled();
             boolean readonly = spinner.isReadonly();
 
@@ -110,15 +113,18 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
             if (readonly) {
                 writer.writeAttribute("readonly", component, "readonly");
             }
-            if (!readonly && !disabled && hasBehaviors) {
+            boolean noJs = false;
+            if (readonly || disabled){
+                noJs = true;
+            }
+            if (!noJs && hasBehaviors) {
                 String event = spinner.getDefaultEventName(context);
                 String cbhCall = this.buildAjaxRequest(context, cbh, event);
                 writer.writeAttribute("onblur", cbhCall, null);
-            } else if (singleSubmit) {
+            } else if (!noJs && singleSubmit) {
                 writer.writeAttribute("onblur", "ice.se(event, this);", null);
             }
             writer.endElement("input");
-            writer.endElement(HTML.SPAN_ELEM);
         } else {
             writeJavascriptFile(context, component, JS_NAME, JS_MIN_NAME, JS_LIBRARY);
             String value = encodeValue(spinner, initialValue);
@@ -152,6 +158,12 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
             builder2.append(behaviors);
         }
         builder2.append("});");
+        boolean disabledOrReadonly = false;
+        boolean disabled = dateSpinner.isDisabled();
+        boolean readonly = dateSpinner.isReadonly();
+        if (readonly || disabled){
+            disabledOrReadonly = true;
+        }
         builder.append(jsCallStart).append(builder2);
         StringBuilder inputCall = new StringBuilder(inputCallStart).append(builder2);
         String jsCall = builder.toString();
@@ -168,8 +180,9 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         writer.startElement("input", uiComponent);
         writer.writeAttribute("id", clientId + "_input", "id");
         writer.writeAttribute("name", clientId + "_input", "name");
-        writer.writeAttribute("onblur", inputCall.toString(), null);
-
+        if (!disabledOrReadonly){
+            writer.writeAttribute("onblur", inputCall.toString(), null);
+        }
         // apply class attribute and pass though attributes for style.
         PassThruAttributeWriter.renderNonBooleanAttributes(writer, uiComponent,
                 dateSpinner.getCommonAttributeNames());
@@ -183,10 +196,10 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
             writer.writeAttribute("value", value, null);
         }
         writer.writeAttribute("type", "text", "type");
-        if (dateSpinner.isReadonly()) {
+        if (readonly) {
             writer.writeAttribute("readonly", "readonly", null);
         }
-        if (dateSpinner.isDisabled()) {
+        if (disabled) {
             writer.writeAttribute("disabled", "disabled", null);
         }
         writer.endElement("input");
@@ -204,7 +217,8 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         writer.writeAttribute("class", DateSpinner.POP_UP_CLASS, null);
         if (dateSpinner.isDisabled()) {
             writer.writeAttribute("disabled", "disabled", null);
-        } else {
+        }
+        if (!disabledOrReadonly){
             // touch event can be problematic sometime not actualy getting called
             // for ui widgets that don't require rapid response then stick with onClick
             writer.writeAttribute(CLICK_EVENT, "mobi.datespinner.toggle('" + clientId + "');", null);
@@ -277,7 +291,7 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         writer.startElement("div", uiComponent);                          //button container for set or cancel
         writer.writeAttribute("class", "mobi-date-submit-container", null);
         writer.startElement("input", uiComponent);
-        writer.writeAttribute("class", "mobi-button", null);
+        writer.writeAttribute("class", CSSUtils.STYLECLASS_BUTTON, null);
         writer.writeAttribute("type", "button", "type");
         writer.writeAttribute("value", "Set", null);
         if (!dateSpinner.isDisabled() && !dateSpinner.isReadonly()) {
@@ -286,7 +300,7 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         writer.endElement("input");
 
         writer.startElement("input", uiComponent);
-        writer.writeAttribute("class", "mobi-button", null);
+        writer.writeAttribute("class", CSSUtils.STYLECLASS_BUTTON, null);
         writer.writeAttribute("type", "button", "type");
         writer.writeAttribute("value", "Cancel", null);
         writer.writeAttribute(CLICK_EVENT, "mobi.datespinner.close('" + clientId + "');", null);
@@ -308,6 +322,7 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
         int mnthInt = spinner.getMonthInt();
         int dateInt = spinner.getDayInt();
         writer.startElement("span", uiComponent);
+        writer.writeAttribute(CLASS_ATTR, "mobi-hidden", null);
         writer.writeAttribute("id", clientId + "_script", "id");
         writer.startElement("script", null);
         writer.writeAttribute("type", "text/javascript", null);
@@ -511,7 +526,7 @@ public class DateSpinnerRenderer extends BaseInputRenderer {
      * @return ture if the native dialog should be used
      */
     private boolean shouldUseNative(DateSpinner component) {
-        return component.isUseNative() && Utils.shouldUseNative();
+        return component.isUseNative() && MobiJSFUtils.getClientDescriptor().isHasNativeDatePicker();
     }
 
     /**

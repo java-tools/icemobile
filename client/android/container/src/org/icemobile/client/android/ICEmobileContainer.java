@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -27,13 +27,15 @@ import java.util.Vector;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.view.LayoutInflater;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.content.DialogInterface;
 import android.webkit.HttpAuthHandler;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 import android.view.ViewGroup;
 import android.os.Bundle;
 import android.content.res.Configuration;
@@ -45,6 +47,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Build;
+import android.os.Message;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.webkit.JsResult;
@@ -60,6 +63,8 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.content.ComponentName;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.webkit.WebResourceResponse;
 
 import android.media.MediaPlayer;
 import android.widget.VideoView;
@@ -68,6 +73,11 @@ import android.view.View;
 import android.webkit.DownloadListener;
 import android.net.Uri;
 import android.content.ActivityNotFoundException;
+import android.view.animation.Animation;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation.AnimationListener;
+
 
 import org.icemobile.client.android.c2dm.C2dmHandler;
 import org.icemobile.client.android.c2dm.C2dmRegistrationHandler;
@@ -89,6 +99,7 @@ import org.icemobile.client.android.video.VideoHandler;
 import org.icemobile.client.android.util.UtilInterface;
 import org.icemobile.client.android.util.JavascriptLoggerInterface;
 import org.icemobile.client.android.util.FileLoader;
+import org.icemobile.client.android.util.SubmitProgressListener;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Field;
@@ -97,7 +108,7 @@ import android.graphics.Paint;
 
 public class ICEmobileContainer extends Activity
     implements SharedPreferences.OnSharedPreferenceChangeListener,
-	       ConnectionChangeListener, C2dmRegistrationHandler {
+	       ConnectionChangeListener, C2dmRegistrationHandler, SubmitProgressListener {
 
     /* Container configuration constants */
     protected static final String HOME_URL = "http://www.icemobile.org/demos.html";
@@ -121,9 +132,8 @@ public class ICEmobileContainer extends Activity
 
     public static final String SCAN_ID = "org.icemobile.id";
 
-    /* progress bar config */
-    protected static final int PROGRESS_DIALOG = 0;
-    private static final String PREFERENCE_PROGRESS_BAR_KEY = "progressBar";
+    // Handler messages
+    protected static final int PROGRESS_MSG = 0;
 
     // Authentication dialog
     protected static final int AUTH_DIALOG = 2;
@@ -153,8 +163,6 @@ public class ICEmobileContainer extends Activity
     private SharedPreferences prefs;
     private HistoryManager historyManager;
     private Vector history;
-    private boolean showLoadProgress;
-    private ProgressDialog progressDialog;
     private boolean isNetworkUp;
     private ConnectionChangeService connectionChangeService;
     private AlertDialog networkDialog;
@@ -163,6 +171,10 @@ public class ICEmobileContainer extends Activity
     private String authPw;
     private String mUserAgentString; 
     private boolean pendingCloudPush;
+    private ProgressBar pBar;
+    private Animation fadeOut;
+    private int lastProgress;
+    private View mCachedVideoView;
 
     /**
      * Called when the activity is first created.
@@ -172,6 +184,19 @@ public class ICEmobileContainer extends Activity
         super.onCreate(savedInstanceState);
         self = this;
 	pendingCloudPush = false;
+
+	// Create handler;
+	mHandler = new Handler() {
+		@Override
+		    public void handleMessage(Message msg) {
+		    switch(msg.what) {
+		    case PROGRESS_MSG:
+			adjustProgress(msg.arg1);
+			break;
+		    default:
+		    }
+		}
+	    };
 
         /* Bind to network connectivity monitoring service */
         Intent bindingIntent = new Intent(self, ConnectionChangeService.class);
@@ -192,7 +217,25 @@ public class ICEmobileContainer extends Activity
         mWebView.setWebViewClient(new ICEfacesWebViewClient());
         mWebView.setWebChromeClient(new ICEfacesWebChromeClient());
         mWebView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-        Log.e("ICEmobile", "User Agent = " + mWebView.getSettings().getUserAgentString());
+        Log.d("ICEmobile", "User Agent = " + mWebView.getSettings().getUserAgentString());
+
+	// Initialize Progress bar
+	pBar = (ProgressBar) findViewById(R.id.pbar);
+	pBar.setVisibility(android.view.View.INVISIBLE);
+	pBar.setMax(100);
+	pBar.setProgress(0);
+	fadeOut = new AlphaAnimation(1, 0);
+	fadeOut.setInterpolator(new AccelerateInterpolator()); // and this
+	fadeOut.setDuration(250);
+	fadeOut.setAnimationListener(new AnimationListener() {
+		public void onAnimationEnd(Animation animation) {
+		    pBar.setVisibility(android.view.View.INVISIBLE);
+		}
+		public void onAnimationStart(Animation animation) {
+		}
+		public void onAnimationRepeat(Animation animation) {
+		}
+	    });
 
         mUserAgentString = mWebView.getSettings().getUserAgentString();
         assetManager = getAssets();
@@ -216,7 +259,6 @@ public class ICEmobileContainer extends Activity
         /* Establish initial container configuration */
         prefs = PreferenceManager.getDefaultSharedPreferences(this);
         accelerated = prefs.getBoolean("accelerate", false);
-        //setHwAccelerate(accelerated, false);
         includeUtil();
         if (INCLUDE_QRCODE) {
             includeQRCode();
@@ -253,10 +295,6 @@ public class ICEmobileContainer extends Activity
         }
         newURL = prefs.getString("url", HOME_URL);
         setGallery(prefs.getBoolean("gallery", false));
-
-        progressDialog = new ProgressDialog(ICEmobileContainer.this);
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-        showLoadProgress = prefs.getBoolean(PREFERENCE_PROGRESS_BAR_KEY, false);
     }
 
     @Override
@@ -294,7 +332,7 @@ public class ICEmobileContainer extends Activity
     @Override
 	protected void onResume() {
         super.onResume();
-        utilInterface.loadURL("javascript:ice.push.connection.resumeConnection();");
+        utilInterface.loadURL("javascript:if( ice.push ){ice.push.connection.resumeConnection();}");
         if (!newURL.equals(currentURL)) {
             loadUrl();
         } else {
@@ -302,7 +340,7 @@ public class ICEmobileContainer extends Activity
 	    if (pendingCloudPush) {
 		pendingCloudPush = false;
 		mC2dmHandler.clearPendingNotification();
-		utilInterface.loadURL("javascript:ice.mobiRefresh();");
+		utilInterface.loadURL("javascript:if( ice ){ice.mobiRefresh();}");
 	    }
 	}
     }
@@ -311,7 +349,7 @@ public class ICEmobileContainer extends Activity
     protected void onPause() {
         super.onPause();
         mAudioPlayer.release();
-        utilInterface.loadURL("javascript:ice.push.connection.pauseConnection();");
+        utilInterface.loadURL("javascript:if( ice.push ){ice.push.connection.pauseConnection();}");
     }
 
     @Override
@@ -350,6 +388,11 @@ public class ICEmobileContainer extends Activity
                 String[] historyList = (String[]) history.toArray(new String[history.size()]);
                 intent.putExtra("history", historyList);
                 startActivityForResult(intent, HISTORY_CODE);
+                return true;
+            case R.id.clear_cookies:
+		CookieSyncManager.createInstance(this);         
+		CookieManager cookieManager = CookieManager.getInstance();      		cookieManager.removeAllCookie();
+		cookieManager.setCookie(currentURL, "com.icesoft.user-agent=HyperBrowser/1.0");
                 return true;
             case R.id.stop:
                 if (mC2dmHandler != null) {
@@ -391,6 +434,9 @@ public class ICEmobileContainer extends Activity
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
         if (key.equals("url")) {
             newURL = prefs.getString(key, HOME_URL);
+	    if (!newURL.startsWith("http://")) {
+		newURL = "http://" + newURL;
+	    }
             historyManager.add(newURL);
         } else if (key.equals("gallery")) {
             setGallery(prefs.getBoolean(key, false));
@@ -404,13 +450,6 @@ public class ICEmobileContainer extends Activity
                     mC2dmHandler.stop();
                 }
             }
-        } else if (key.equals(PREFERENCE_PROGRESS_BAR_KEY)) {
-            showLoadProgress = prefs.getBoolean(PREFERENCE_PROGRESS_BAR_KEY, true);
-        } else if (key.equals("accelerate")) {
-            if (accelerated != prefs.getBoolean("accelerate", false)) {
-                accelerated = !accelerated;
-                //setHwAccelerate(accelerated, true);
-            }
         }
     }
 
@@ -422,8 +461,26 @@ public class ICEmobileContainer extends Activity
         pendingCloudPush = true;
     }
 
+    public void submitProgress(int progress) {
+	Message msg = new Message();
+	msg.what = PROGRESS_MSG;
+	msg.arg1 = progress;
+	mHandler.sendMessage(msg);
+    }
+
+    private void adjustProgress(int progress) {
+	if (progress != 100) {
+	    pBar.setVisibility(android.view.View.VISIBLE);
+	} else if (lastProgress != 100) {
+	    pBar.startAnimation(fadeOut);
+	}
+	self.setProgress(progress * 100);
+	lastProgress = progress;
+	pBar.setProgress(progress);
+    }
+
     protected void setCloudNotificationId() {
-        //Log.e("ICEmobile", "Setting cloud push: " + getCloudNotificationId());
+        Log.d("ICEmobile", "Setting cloud push: " + getCloudNotificationId());
         utilInterface.loadURL("javascript:if( ice.push ){ ice.push.parkInactivePushIds('" +
                                   getCloudNotificationId() + "');}");
     }
@@ -459,10 +516,17 @@ public class ICEmobileContainer extends Activity
     }
 
     private class ICEfacesWebViewClient extends WebViewClient {
+        boolean stillLoading = true;
+
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             view.loadUrl(url);
             return true;
+        }
+
+        @Override
+        public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            stillLoading = true;
         }
 
         @Override
@@ -473,12 +537,23 @@ public class ICEmobileContainer extends Activity
             historyManager.add(url);
             currentURL = url;
             newURL = url;
-            //Log.e("ICEcontainer", "Page loaded: " + url);
+            stillLoading = false;
         }
 
         @Override
         public void onLoadResource(WebView view, String url) {
             super.onLoadResource(view, url);
+        }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+            //prevent icepush from blocking if page not yet loaded
+            if (url.contains("listen.icepush"))  {
+                if (stillLoading)  {
+                    return new WebResourceResponse(null, null, null);
+                }
+            }
+            return null;
         }
 
         @Override
@@ -527,7 +602,8 @@ public class ICEmobileContainer extends Activity
                 if (frame.getFocusedChild() instanceof VideoView) {
                     video = (VideoView) frame.getFocusedChild();
                     frame.removeView(video);
-                    self.setContentView(video);
+                    mWebView.addView(video);
+                    mCachedVideoView = video;
                     video.setOnCompletionListener(this);
                     video.setOnErrorListener(this);
                     video.start();
@@ -550,7 +626,10 @@ public class ICEmobileContainer extends Activity
         private void returnToWebView() {
             video.stopPlayback();
             callback.onCustomViewHidden();
-            self.setContentView(mWebView);
+            if (mCachedVideoView != null) {
+                mWebView.removeView(mCachedVideoView);
+                mCachedVideoView = null;
+            }
         }
 
         /**
@@ -562,15 +641,8 @@ public class ICEmobileContainer extends Activity
          */
         @Override
         public void onProgressChanged(WebView view, int progress) {
-            self.setProgress(progress * 100);
-            progressDialog.setProgress(progress);
-            if (!showLoadProgress || progress >= 100) {
-                progressDialog.hide();
-            } else {
-                progressDialog.show();
-            }
+	    adjustProgress(progress);
         }
-
     }
 
     private void loadUrl() {
@@ -596,7 +668,6 @@ public class ICEmobileContainer extends Activity
 
     private void includeContacts() {
 
-//        mContactListHandler = new ContactListHandler( this, utilInterface);
         mContactListInterface = new ContactListInterface(utilInterface, this, getContentResolver());
         mWebView.addJavascriptInterface(mContactListInterface, "ICEContacts");
     }
@@ -636,57 +707,6 @@ public class ICEmobileContainer extends Activity
         }
         mC2dmHandler.start(C2DM_SENDER);
     }
-
-    private void setHwAccelerate(boolean accel, boolean restart) {
-        String version = Build.VERSION.RELEASE;
-        /* Only applies after API 11 */
-
-        if (version.compareTo("3.") >= 0) {
-            int swFlag, hwFlag, hwAccelFlag;
-            try {
-                Field hw = View.class.getField("LAYER_TYPE_HARDWARE");
-                Field sw = View.class.getField("LAYER_TYPE_SOFTWARE");
-                hwFlag = hw.getInt(null);
-                swFlag = sw.getInt(null);
-                Field hwAccel = WindowManager.LayoutParams.class.getField("FLAG_HARDWARE_ACCELERATED");
-                hwAccelFlag = hwAccel.getInt(null);
-            } catch (Exception e) {
-                Log.e("ICEmobile", "Could not get HW Acceleration flags. Hard coding them.");
-                hwFlag = 2;
-                swFlag = 1;
-                hwAccelFlag = 16777216;
-            }
-
-            try {
-                Method setLayerType = WebView.class.getMethod("setLayerType",
-                                                              new Class[]{int.class, Paint.class});
-
-                Paint paint = null;
-                if (accel) {
-                    getWindow().setFlags(hwAccelFlag, hwAccelFlag);
-                    Object[] params = new Object[]{hwFlag, paint};
-                    setLayerType.invoke(mWebView, params);
-                } else {
-                    Object[] params = new Object[]{swFlag, paint};
-                    setLayerType.invoke(mWebView, params);
-                }
-                if (restart) {
-                    // Force activity to be recreated;
-                    Method recreateMethod;
-                    try {
-                        recreateMethod = Activity.class.getMethod("recreate", new Class[0]);
-                        recreateMethod.invoke(self, new Object[0]);
-                    } catch (Exception e) {
-                        finish();
-                    }
-                }
-            } catch (Exception e) {
-                Log.e("ICEmobile", "Could not set HW acceleration.");
-            }
-
-        }
-    }
-
 
     private class HistoryManager {
         private File historyFile;
@@ -749,21 +769,8 @@ public class ICEmobileContainer extends Activity
     }
 
     @Override
-    protected void onPrepareDialog(int id, Dialog dialog) {
-        switch (id) {
-            case PROGRESS_DIALOG:
-                progressDialog.setProgress(0);
-        }
-    }
-
-    @Override
     protected Dialog onCreateDialog(int id) {
         switch (id) {
-            case PROGRESS_DIALOG:
-                progressDialog = new ProgressDialog(ICEmobileContainer.this);
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                progressDialog.setMessage("Loading...");
-                return progressDialog;
             case AUTH_DIALOG:
                 AlertDialog.Builder builder;
                 AlertDialog authDialog;

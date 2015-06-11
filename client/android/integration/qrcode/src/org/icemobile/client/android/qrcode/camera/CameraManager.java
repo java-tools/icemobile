@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -124,6 +124,9 @@ public final class CameraManager {
   public void openDriver(SurfaceHolder holder) throws IOException {
     if (camera == null) {
       camera = Camera.open();
+      if (camera == null) {
+        camera = Camera.open(0);
+      }
       if (camera == null) {
         throw new IOException();
       }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -28,11 +28,12 @@ import java.util.logging.Logger;
  */
 public class PagePanelBodyTag extends TagSupport {
 
-    public static final String BODY_CLASS = "mobi-pagePanel-body";
+    public static final String BODY_CLASS = "mobi-pagePanel-body ";
     public static final String BODY_NO_HEADER_CLASS = "mobi-pagePanel-body-noheader";
     public static final String BODY_NO_FOOTER_CLASS = "mobi-pagePanel-body-nofooter";
     public PagePanelTag mParent;
-
+    private String swatch = "c";
+    
     private static Logger LOG = Logger.getLogger(PagePanelBodyTag.class.getName());
      public void setParent(Tag parent) {
         if (!(parent instanceof PagePanelTag)) {
@@ -42,7 +43,7 @@ public class PagePanelBodyTag extends TagSupport {
     }
 
     public int doStartTag() throws JspTagException {
-        StringBuilder bodyClass = new StringBuilder(BODY_CLASS);
+        StringBuilder bodyClass = new StringBuilder(BODY_CLASS+"ui-body-"+swatch);
         if (this.noHeader || !mParent.isHasHeader()){
             bodyClass.append(" ").append(BODY_NO_HEADER_CLASS);
         }
@@ -109,5 +110,10 @@ public class PagePanelBodyTag extends TagSupport {
     public void setStyle(String style) {
         this.style = style;
     }
+    public PagePanelTag getMParent(){
+        return this.mParent;
+    }   
+    public String getSwatch(){ return swatch; }
+    public void setSwatch(String swatch){ this.swatch = swatch; }
 
 }

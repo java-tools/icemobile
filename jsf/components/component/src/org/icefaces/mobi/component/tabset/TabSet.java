@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -19,33 +19,32 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.el.MethodExpression;
+import javax.faces.application.ProjectStage;
+import javax.faces.application.Resource;
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIViewRoot;
+import javax.faces.context.FacesContext;
 import javax.faces.event.AbortProcessingException;
 import javax.faces.event.FacesEvent;
 import javax.faces.event.PhaseId;
 import javax.faces.event.ValueChangeEvent;
 
 import org.icefaces.mobi.api.ContentPaneController;
+import org.icemobile.component.IPagePanel;
+import org.icefaces.mobi.component.pagepanel.PagePanel;
+import org.icefaces.mobi.renderkit.InlineScriptEventListener;
+import org.icefaces.mobi.utils.MobiJSFUtils;
+import org.icemobile.component.ITabSet;
 import org.icefaces.mobi.utils.JSFUtils;
+import org.icemobile.util.ClientDescriptor;
 
 
-public class TabSet extends TabSetBase implements ContentPaneController {
+public class TabSet extends TabSetBase implements ContentPaneController, ITabSet {
     private static Logger logger = Logger.getLogger(TabSet.class.getName());
-    public static final StringBuilder TABSET_CONTAINER_CLASS = new StringBuilder("mobi-tabset ");
-    public static final StringBuilder TABSET_CONTAINER_BOTTOM_CLASS = new StringBuilder("mobi-tabset-tabs-bottom ");
-    public static final StringBuilder TABSET_CONTAINER_BOTTOM_FOOTER_CLASS = new StringBuilder("mobi-tabset-tabs-bottom-footer ");
-    public static final StringBuilder TABSET_CONTAINER_TOP_CLASS = new StringBuilder("mobi-tabset-tabs-top ");
-    public static final StringBuilder TABSET_CONTAINER_TOP_HEADER_CLASS = new StringBuilder("mobi-tabset-tabs-top-header ");
-    public static final StringBuilder TABSET_TABS_CLASS = new StringBuilder("mobi-tabset-tabs ");
-    /* activeTab is now done with javascript so tabs are not rendered every request if not changed */
-  //  public static final StringBuilder TABSET_ACTIVETAB_CLASS = new StringBuilder("activeTab ");
-    public static final StringBuilder TABSET_CONTENT_CLASS = new StringBuilder("mobi-tabset-content ");
-    public static final StringBuilder TABSET_HIDDEN_PAGECLASS = new StringBuilder("mobi-tabpage-hidden");
-    public static final String TABSET_ACTIVE_CONTENT_CLASS= "mobi-tabpage";
 
-    private boolean updatePropScriptTag = false;
-
+    private boolean isTop = false;
     public static enum orientation {top, bottom}
+    private int index = 0;
 
     public enum OrientationType {
         top, bottom;
@@ -60,9 +59,9 @@ public class TabSet extends TabSetBase implements ContentPaneController {
      * method is required by ContentPaneController interface no error checking as
      * component is not in the tree
      */
-    public String getSelectedId() {
-        return getCurrentId();
-    }
+ /*   public String getSelectedId() {
+        return selectedId;
+    }  */
 
     /**
      * The main difference between this and getSelectedId() is that this will
@@ -72,7 +71,7 @@ public class TabSet extends TabSetBase implements ContentPaneController {
      * @return The id and index of the current tab
      */
     IdIndex resolveCurrentIdAndIndex() {
-        String currentId = getCurrentId();
+        String currentId = getSelectedId();
         int tabIndex = 0;
         // no current id then default to defaultId if present or as a last
         // resort to the first contentPane which is index zero.
@@ -94,8 +93,9 @@ public class TabSet extends TabSetBase implements ContentPaneController {
             comp = getChildren().get(tabIndex);
             currentId = comp.getId();
         }
-
+        this.index = tabIndex;
         // store the id and index of the selected pane
+    //    logger.info("Storing new index="+tabIndex+" id="+currentId);
         return new IdIndex(currentId, tabIndex);
     }
 
@@ -129,14 +129,6 @@ public class TabSet extends TabSetBase implements ContentPaneController {
         super.queueEvent(event);
     }
 
-    public void setUpdatePropScriptTag(boolean update) {
-        this.updatePropScriptTag = update;
-    }
-
-    public boolean isUpdatePropScriptTag() {
-        return this.updatePropScriptTag;
-    }
-
 
     public static class IdIndex {
         private String id;
@@ -155,4 +147,80 @@ public class TabSet extends TabSetBase implements ContentPaneController {
             return index;
         }
     }
+
+    public boolean setIsTop(String orientation){
+        if (orientation != null && orientation.length() > 0) {
+            if (orientation.equals(TabSet.OrientationType.bottom.name())) {
+                this.isTop =false;
+            } else  {
+                this.isTop = true;
+            }
+        }
+        return this.isTop;
+    }
+    public boolean getIsTop(){
+        return this.isTop;
+    }
+
+    /*
+        see if pagePanel is present as ancestor and if the header for pagePanel is as well
+        should this be done from PagePanelp and see if tabset is one of it's children
+        also, if this can't be changed dynamically, only have to do this once.
+     */
+    public void setParentHeaderFooter(){
+        UIComponent parent = getParent();
+        do  {
+            if (parent instanceof org.icefaces.mobi.component.pagepanel.PagePanel) {
+                setHeaderFooter(parent);
+                return;
+            }
+            parent =  parent.getParent();
+        }
+        while (parent !=null);
+    }
+
+    private void setHeaderFooter(UIComponent parent) {
+        if (parent.getFacetCount() > 0) {
+            if (null != parent.getFacet(IPagePanel.HEADER_FACET)) {
+                this.setParentHeader(true);
+            } else {
+                this.setParentHeader(false);
+            }
+            if (null != parent.getFacet(IPagePanel.FOOTER_FACET)){
+                this.setParentFooter(true);
+            }else {
+                this.setParentFooter(false);
+            }
+        }
+    }
+
+    public ClientDescriptor getClient() {
+        return MobiJSFUtils.getClientDescriptor();
+    }
+
+    public int getIndex() {
+        return this.index;
+    }
+
+    public String getJavascriptFileRequestPath() {
+        String jsFname = JS_NAME;
+        FacesContext facesContext = FacesContext.getCurrentInstance();
+        if (FacesContext.getCurrentInstance().isProjectStage(ProjectStage.Production)){
+            jsFname = JS_MIN_NAME;
+        }
+        //set jsFname to min if development stage
+        Resource jsFile = facesContext.getApplication().getResourceHandler()
+                .createResource(jsFname, LIB_JSF);
+        return jsFile.getRequestPath();
+    }
+
+    public boolean isScriptLoaded() {
+        return InlineScriptEventListener.isScriptLoaded(FacesContext.getCurrentInstance(), ITabSet.JS_NAME);
+    }
+
+    public void setScriptLoaded() {
+        InlineScriptEventListener.setScriptLoaded(FacesContext.getCurrentInstance(), ITabSet.JS_NAME);
+    }
+
+
 }

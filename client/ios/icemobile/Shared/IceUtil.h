@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2012 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,9 +16,13 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <QuartzCore/QuartzCore.h>
 
 @interface IceUtil : NSObject
 
++ (void)makeFancyButton:(UIButton*)button withLayer:(CAGradientLayer*)fancyLayer;
++ (void)makeFancyButton:(UIButton*)button withColor:(UIColor*)color;
 + (void)makeFancyButton:(UIButton*)button;
++ (void)pushFancyButton:(UIButton*)button;
 
 @end

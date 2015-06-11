@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -65,6 +65,25 @@ public class BaseLayoutRenderer extends CoreRenderer {
         writer.writeAttribute("type", "hidden", "type");
         writer.writeAttribute("id", clientId+"_hidden", "id");
         writer.writeAttribute("name", clientId+"_hidden", "name");
+        writer.endElement("input");
+        writer.endElement("span");
+    }
+
+    /**
+     * used by content pane controllers...implement ContentPaneController
+     * @param context
+     * @param uiComponent
+     * @throws IOException
+     */
+    protected void encodeHidden(FacesContext context, UIComponent uiComponent, String value) throws IOException {
+        ResponseWriter writer = context.getResponseWriter();
+        String clientId = uiComponent.getClientId(context);
+        writer.startElement("span", uiComponent);
+        writer.startElement("input", uiComponent);
+        writer.writeAttribute("type", "hidden", "type");
+        writer.writeAttribute("id", clientId+"_hidden", "id");
+        writer.writeAttribute("name", clientId+"_hidden", "name");
+        writer.writeAttribute("value", value, "value");
         writer.endElement("input");
         writer.endElement("span");
     }

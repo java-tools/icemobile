@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -41,18 +41,21 @@
     }
     function calcMaxDivHeight(clientId, handleHt) {
         var mxht = 0;
-        //find all sections of the clientId and calc height.  set maxheight and height to max height of the divs
-        var children = document.getElementById(clientId).getElementsByTagName('section');
-        for (var i = 0; i < children.length; i++) {
-            var anode = children[i];
-            var max = Math.max(anode.scrollHeight, anode.offsetHeight, anode.clientHeight);
-            if (max > 0 && max > mxht) {
-                mxht = max;
+        var elem = document.getElementById(clientId);
+        if( elem ){
+          //find all sections of the clientId and calc height.  set maxheight and height to max height of the divs
+            var children = document.getElementById(clientId).children;
+            for (var i = 0; i < children.length; i++) {
+                var anode = children[i];
+                var max = Math.max(anode.scrollHeight, anode.offsetHeight, anode.clientHeight);
+                if (max > 0 && max > mxht) {
+                    mxht = max;
+                }
             }
-        }
-        if (mxht <= handleHt ) {
-            mxht = 0;
-            ice.log.debug(ice.log,"COULD NOT CALC A mxht");
+            if (mxht <= handleHt ) {
+                mxht = 0;
+                ice.log.debug(ice.log,"COULD NOT CALC A mxht");
+            }
         }
         return mxht;
     }
@@ -71,7 +74,7 @@
         if (opened && fht){
            // opened.setAttribute("style", "height:"+fht+"; maxHeight: "+fht+";");
             opened.style.height=fht;
-           // opened.style.maxHeight = fht;
+            opened.style.maxHeight = fht;
         }
     }
     function openPane(elem, h){
@@ -110,7 +113,7 @@
         var openElem = document.getElementById(paneOpId);
         var cntr = 0;
         if (!openElem && accordRoot.hasChildNodes()){
-            var children = accordRoot.getElementsByTagName("section");
+            var children = accordRoot.children;
             openElem = children[0];
             paneOpId = children[0].id;
         }
@@ -118,7 +121,7 @@
         origHeight = fixedHeight =  cfgIn.fixedHeight || null;
         var fHtVal = cfgIn.fHtVal || null;
         if (!openElem){
-            ice.log.debug(ice.log,"Accordion has no children");
+            console.log("Accordion has no children");
             this.setDisabled(true);
         }
         var handleheight = getHandleHeight(accordRoot);
@@ -169,24 +172,30 @@
                 updateHidden(clientId, subString);
                 openElem = document.getElementById(paneOpId);
                 if (!openElem){
-                    var children = accordRoot.getElementsByTagName("section");
+                    var children = accordRoot.children;
                     openElem = children[0];
                     paneOpId = children[0].id;
                 }
                 if (autoheight && openElem && (maxHeight > 0)){
                     fixedHeight = maxHeight+"px";
-                   // console.log("\t updated fixedHeight="+fixedHeight);
+                 //   console.log("\t updated fixedHeight="+fixedHeight);
                 }
                 if (paneOpId && paneOpId == theParent.id){
                     if (openElem.className=="open"){
                         closePane(openElem, handleht);
                     } else {
+                        //contents may have changed so get new ones or may be single pane MOBI-611
+                        if (cached!="true"){
+                            ice.se(null, clientId);
+                        }
+                    //    console.log(" CLIENT and fixedHeight="+fixedHeight+" openElem id="+openElem.id);
                         openPane( openElem, fixedHeight);
                     }
                 }
                 else {//panel has changed
                     closePane(openElem, handleht);
-                    if (cached==true){
+                    if (cached!="false"){
+                       // console.log(" PANE CHANGED  fixedHeight="+fixedHeight);
                         openPane(theParent,fixedHeight);
                         paneOpId = theParent.id;
                         openElem = theParent;

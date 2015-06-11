@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -23,9 +23,9 @@ import org.icefaces.mobi.utils.Attribute;
 public class PagePanel extends PagePanelBase {
 
     // base styles for the three page sections
-    public static final String HEADER_CLASS = "mobi-pagePanel-header";
-    public static final String FOOTER_CLASS = "mobi-pagePanel-footer";
-    public static final String BODY_CLASS = "mobi-pagePanel-body";
+    public static final String HEADER_CLASS = "mobi-pagePanel-header ui-header ";
+    public static final String FOOTER_CLASS = "mobi-pagePanel-footer ui-footer ";
+    public static final String BODY_CLASS = "mobi-pagePanel-body ";
     public static final String CTR_CLASS = "mobi-pagePanel-ctr";
 
     // style classes to remove header footer margins

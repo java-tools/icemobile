@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 
 public class DeviceStyleSheet extends DeviceStyleSheetBase {
     private static Logger log = Logger.getLogger(DeviceStyleSheet.class.getName());
-
+    public static final String DEFAULT_LIBRARY = "org.icefaces.component.skins";
     // pass through attributes for input text
     public Attribute[] PASS_THOUGH_ATTRIBUTES = {
             new Attribute("media", null)

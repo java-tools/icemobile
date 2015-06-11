@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -25,7 +25,9 @@ import javax.servlet.jsp.JspException;
 
 import org.icemobile.component.IDevice;
 import org.icemobile.renderkit.DeviceCoreRenderer;
+import org.icemobile.util.CSSUtils;
 import org.icemobile.util.ClientDescriptor;
+import org.icemobile.util.SXUtils;
 
 public abstract class DeviceTag extends BaseBodyTag implements IDevice{
     private static final String CONTAINER_ONCLICK = "ice.%s('%s');";
@@ -62,7 +64,7 @@ public abstract class DeviceTag extends BaseBodyTag implements IDevice{
     }
     
     public void writeStandardAttributes(TagWriter writer, boolean enhancedOrIOS) throws IOException  {
-    	StringBuilder inputStyle = new StringBuilder(enhancedOrIOS ? CommandButtonTag.BASE_STYLE_CLASS : "");
+    	StringBuilder inputStyle = new StringBuilder(enhancedOrIOS ? CSSUtils.STYLECLASS_BUTTON : "");
         if (disabled){
             inputStyle.append(CommandButtonTag.DISABLED_STYLE_CLASS);
         }
@@ -96,11 +98,7 @@ public abstract class DeviceTag extends BaseBodyTag implements IDevice{
         this.disabled = disabled;
     }
     public String getSessionId(){
-        HttpSession session = getRequest().getSession(false);
-        if (null == session)  {
-            return null;
-        }
-        return session.getId();
+        return SXUtils.getSessionIdCookie(getRequest());
     }
     public String getComponentType(){
           return command;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -37,17 +37,8 @@ public class AccordionCoreRenderer extends BaseCoreRenderer implements IRenderer
         String clientId = accordion.getClientId();
         /* JSF comp writes script into 1st span */
         if (!accordion.isScriptLoaded() && !isJSP)  {
-            writer.startElement(DIV_ELEM);
-            writer.writeAttribute(ID_ATTR, clientId +"_libJSDiv");
-            writer.startElement(SPAN_ELEM, accordion);
-            writer.writeAttribute(ID_ATTR, clientId +"_libJS");
-            writer.startElement("script", accordion);
-            writer.writeAttribute("text", "text/javascript");
-            writer.writeAttribute("src", accordion.getJavascriptFileRequestPath());
-            writer.endElement("script");
+            super.writeExternalScript(component, writer, accordion.getJavascriptFileRequestPath());            
             accordion.setScriptLoaded();
-            writer.endElement(SPAN_ELEM);
-            writer.endElement(DIV_ELEM);
         } 
         
         /* write out root tag.  For current incarnation html5 semantic markup is ignored */
@@ -71,6 +62,7 @@ public class AccordionCoreRenderer extends BaseCoreRenderer implements IRenderer
         String openedPaneId = accordion.getOpenedPaneClientId();
         writer.endElement(DIV_ELEM);  //end of _acc div
         writer.startElement(DIV_ELEM, accordion); //start of div for hidden and script
+        writer.writeAttribute(CLASS_ATTR, "mobi-hidden");
         writer.writeAttribute(ID_ATTR, clientId+"_hid");
         if (null != openedPaneId){
             super.writeHiddenInput(writer, accordion, openedPaneId);

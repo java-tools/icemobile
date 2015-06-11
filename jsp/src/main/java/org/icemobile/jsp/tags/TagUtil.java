@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -99,28 +99,5 @@ public class TagUtil {
         }
         return value.trim().equals("");
     }
-     /*    protected void writeJavascriptFile(FacesContext facesContext, 
-            UIComponent component, String JS_NAME, String JS_MIN_NAME, 
-            String JS_LIBRARY) throws IOException {
-        ResponseWriter writer = facesContext.getResponseWriter();
-        String clientId = component.getClientId(facesContext);
-        writer.startElement(HTML.SPAN_ELEM, component);
-        writer.writeAttribute(HTML.ID_ATTR, clientId+"_libJS", HTML.ID_ATTR);
-        if (!isScriptLoaded(facesContext, JS_NAME)) {
-            String jsFname = JS_NAME;
-            if (facesContext.isProjectStage(ProjectStage.Production)){
-                jsFname = JS_MIN_NAME;
-            }
-            //set jsFname to min if development stage
-            Resource jsFile = facesContext.getApplication().getResourceHandler().createResource(jsFname, JS_LIBRARY);
-            String src = jsFile.getRequestPath();
-            writer.startElement("script", component);
-            writer.writeAttribute("text", "text/javascript", null);
-            writer.writeAttribute("src", src, null);
-            writer.endElement("script");
-            setScriptLoaded(facesContext, JS_NAME);
-        } 
-        writer.endElement(HTML.SPAN_ELEM);
-	} */
 
 }

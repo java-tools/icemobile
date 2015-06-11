@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -30,12 +30,16 @@ import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
+import java.util.logging.Logger;
 
 import javax.servlet.jsp.PageContext;
 
 import org.icemobile.renderkit.IResponseWriter;
 
 public class TagWriter implements IResponseWriter{
+    
+    private static final Logger LOG =
+            Logger.getLogger(TagWriter.class.toString());
     
     private Writer out;
     private Stack<String> elementStack = new Stack<String>();
@@ -161,7 +165,23 @@ public class TagWriter implements IResponseWriter{
     }
     
     public void endElement(String name) throws IOException{
-        endElement();
+        String element = elementStack.pop();
+        if( !element.equals(name) ){
+            LOG.warning(" mismatched tag: " + name + ", expected " + element);
+        }
+        if( selfClose ){
+            out.write(SC);
+            selfClose = false;
+        }
+        else{
+            if( !lastElementClosed){
+                out.write(GT);
+            }
+            out.write(ET);
+            out.write(element);
+            out.write(GT);
+        }
+        lastElementClosed = true;
     }
     
     public void startSpan() throws IOException{

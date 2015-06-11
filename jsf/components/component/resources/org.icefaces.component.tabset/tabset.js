@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -27,11 +27,13 @@
     /* taken from accordion with slight modifications */
     function calcMaxChildHeight(containerEl) {
         var mxht = 0;
-        //find all sections of the clientId and calc height.  set maxheight and height to max height of the divs
-        var children = containerEl.getElementsByTagName('div');
-        for (var i = 0; i < children.length; i++) {
-            if (children[i].scrollHeight > mxht) {
-                mxht = children[i].scrollHeight;
+        if( containerEl ){
+          //find all sections of the clientId and calc height.  set maxheight and height to max height of the divs
+            var children = containerEl.getElementsByTagName('div');
+            for (var i = 0; i < children.length; i++) {
+                if (children[i].scrollHeight > mxht) {
+                    mxht = children[i].scrollHeight;
+                }
             }
         }
         return mxht;
@@ -54,10 +56,28 @@
         }
     }
 
+    function setWidthStyle(root){
+        if( root ){
+            var nodes = root.getElementsByTagName('ul');
+            var ul = nodes[0];
+            var children = ul.getElementsByTagName('li');
+            var liLngth = children.length;
+            var containerWidth = root.clientWidth;        
+            var width = Math.floor(containerWidth/liLngth);
+            var percentageWidth = Math.floor(100/liLngth);
+            for (var i = 0; i < liLngth; i++){
+                children[i].style.width = width+"px";
+                children[i].style.maxWidth = percentageWidth+"%";
+            }
+        }
+    }
+
     function setTabActive(id, cls) {
         var curTab = document.getElementById(id);
         if (curTab) {
             curTab.setAttribute("class", cls);
+        }  else {
+            console.log("PROBLEM SETTING ATIVE TAB FOR id="+id);
         }
     }
 
@@ -68,110 +88,159 @@
     function TabSet(clientId, cfgIn) {
         // setup tabContainer
         var tabContainer = document.getElementById(clientId);
-        var tabContent = document.getElementById(clientId + "_tabContent");
+        var contentId = clientId+"_tabContent";
+        var tabContent = document.getElementById(contentId);
         var classHid = "mobi-tabpage-hidden";
         var classVis = "mobi-tabpage";
-        var clsActiveTab = "activeTab";
+        var clsActiveTab = "activeTab ui-btn-active";
         var tabCtrl = clientId + "tab_";
         var tabIndex = cfgIn.tIndex;
-        if (cfgIn.height) {
-            tabContent.style.height = cfgIn.height;
-        } else {
+        var autoWidth = cfgIn.autoWidth;
+        if (autoWidth){
+            setTimeout( function(){
+                setWidthStyle(tabContainer);
+            }, 10);
+            var setWidthStyleListener = function(){ 
+                if( !tabContainer ){
+                    ice.mobi.removeListener(window,"resize", this);
+                    return;
+                };
+                setWidthStyle(tabContainer); 
+            }
+            ice.mobi.addListener(window, 'resize', setWidthStyleListener);
+        }
+        var lastServerIndex = tabIndex;
+        var height = cfgIn.height || -1;
+        var disabled = cfgIn.disabled;
+        var autoheight = cfgIn.autoheight || false;
+        var cntr = 0;
+        if (height !== -1) {
+            tabContent.style.maxHeight = height;
+            tabContent.style.height = height;
+        } else if (autoheight == true){
             var ht = calcMaxChildHeight(tabContent);
             if (ht > 0) {
                 tabContent.style.height = ht + "px";
             }
         }
         setTabActive(tabCtrl + tabIndex, clsActiveTab);
-
-        var origcontents = tabContent.children;
-        var length = origcontents.length;
-        var newPage = origcontents[tabIndex];
+        updateHidden(clientId, tabIndex);
+        var contents = tabContent.childNodes;
+        var length = contents.length;
+        var newPage = contents[tabIndex];
         newPage.className = classVis;
         for (i = 0; i < length; i++) {
             if (i != tabIndex) {
-                origcontents[i].className = classHid;
+               contents[i].className = classHid;
             }
         }
 
         return {
-            showContent: function(el, cfgIn) {
-                if (cfgIn.tIndex == tabIndex) {
+            showContent: function(clientId, el, cfgIn) {
+                if ( disabled == true) {
                     return;
                 }
+                if (!contentId){
+                    contentId = clientId+"_tabContent";
+                }
+         //       tabContent = document.getElementById(contentId);
+                contents = this.getContents(clientId);
                 var parent = el.parentNode;
                 if (!parent) {
                     parent = el.parentElement;
                 }
-                tabContent = document.getElementById(clientId + "_tabContent");
-                var current = tabIndex;
-                var contents = tabContent.children;
-                var oldPage = contents[current];
+                var old = tabIndex;
+                var oldPage = contents[old];
                 oldPage.className = classHid;
-                var currCtrl = tabCtrl + current;
+                var currCtrl = tabCtrl + old;
                 var oldCtrl = document.getElementById(currCtrl);
                 removeClass(oldCtrl, clsActiveTab);
                 var isClient = cfgIn.client || false;
+                tabIndex = cfgIn.tIndex;
+             //   console.log("SHOWCONTENT tabIndex="+tabIndex+" old="+old);
+                if (lastServerIndex==tabIndex){
+                    cntr= cntr + 1;
+                } else {
+                    cntr = 0;
+                    lastServerIndex = tabIndex;
+                }
+                var submitted = tabIndex +","+cntr;
+                  //  console.log(" submitted="+submitted);
+                updateHidden(clientId, submitted);
+                contents[old].setAttribute("class", classHid);
                 if (!isClient) {
-                    updateHidden(clientId, tabIndex + "," + cfgIn.tIndex);
-                    contents[cfgIn.tIndex].className = classHid;
                     ice.se(null, clientId);
                 } else {
-                    tabIndex = cfgIn.tIndex || 0;
-                    var newPage = contents[tabIndex];
-                    newPage.className = classVis;
+                    contents[tabIndex].setAttribute("class", classVis);
                 }
-                //remove class of activetabheader and hide old contents
                 el.setAttribute("class", clsActiveTab);
+             //   console.log("end of SHOW CONTENTS:-") ;
             },
             updateProperties: function (clientId, cfgUpd) {
+                var newHt = cfgUpd.height || -1;
+                if (newHt !== -1 && newHt !== height ){
+                    tabContainer.style.maxHeight = newHt;
+                    tabContainer.style.height = newHt;
+                }
+                var autoWidth = cfgUpd.autoWidth;
+                if (autoWidth){
+                    setTimeout( function(){
+                        setWidthStyle(document.getElementById(clientId));
+                    }, 1);
+                    var setWidthStyleListener = function(){ 
+                        if( !document.getElementById(clientId) ){
+                            ice.mobi.removeListener(window,"resize", this);
+                            return;
+                        };
+                        setWidthStyle(document.getElementById(clientId)); 
+                    }
+                    ice.mobi.addListener(window, 'resize', setWidthStyleListener);
+                }
                 var oldIdx = tabIndex;
+                tabIndex = cfgUpd.tIndex;
+            //    console.log ('UPDATEPROPS>>>> old ='+oldIdx+" UPDATED TabINDEX="+tabIndex);
                 var oldCtrl = document.getElementById(tabCtrl + oldIdx);
                 if (oldCtrl) {
                     removeClass(oldCtrl, clsActiveTab);
                 }
                 //check to see if pages have been added or removed
-                tabContent = document.getElementById(clientId + "_tabContent");
-                var contents = tabContent.children;
-                tabIndex = cfgUpd.tIndex;
-                var tabsId = clientId + "_tabs";
-                /*     var dataCurrent = document.getElementById(clientId+"_dc");
-                 if (dataCurrent){
-                 dataCurrent.value=tabIndex+'';
-                 } */
-                setTabActive(tabCtrl + tabIndex, clsActiveTab);
-                var tabElem = document.getElementById(tabsId);
-                if (tabElem) {
-                    if (oldIdx != tabIndex) {
-                        contents[oldIdx].className = classHid; //need in case change is from server
-                    }
-                    contents[tabIndex].className = classVis;
-                    if (cfgUpd.height) {
-                        var height = cfgUpd.height;
-                        if (height != tabContent.style.height) {
-                            tabContainer.style.height = height;
-                        }
-                    }
+                if (!contentId){
+                    contentId = clientId+"_tabContent";
                 }
+           //     tabContent = document.getElementById(contentId);
+                contents = this.getContents(clientId);
+                var newCtrl = tabCtrl+tabIndex;
+                setTabActive(newCtrl, clsActiveTab);
+                if (oldIdx != tabIndex){
+                    contents[oldIdx].setAttribute("class", classHid);
+                    contents[tabIndex].setAttribute("class", classVis);
+                }
+              //  console.log("end of UPDATE PROPS:-") ;
             },
-            tabIndex: function() {
-                return tabIndex;
+            setDisabled: function(disabledIn){
+                disabled = disabledIn;
+            },
+            getContents: function(clientId){
+                contentId = clientId+"_tabContent";
+                tabContent = document.getElementById(contentId);
+                return tabContent.childNodes;
             }
         }
     }
 
-    mobi.tabsetController = {
+    ice.mobi.tabsetController = {
         tabsets: {},
         initClient: function(clientId, cfg) {
             if (!this.tabsets[clientId]) {
                 this.tabsets[clientId] = TabSet(clientId, cfg);
             } else {
+                this.tabsets[clientId].setDisabled(cfg.disabled);
                 this.tabsets[clientId].updateProperties(clientId, cfg);
             }
         },
         showContent: function(clientId, el, cfgIn) {
             if (this.tabsets[clientId]) {
-                this.tabsets[clientId].showContent(el, cfgIn);
+                this.tabsets[clientId].showContent(clientId, el, cfgIn);
             }
         }
     }

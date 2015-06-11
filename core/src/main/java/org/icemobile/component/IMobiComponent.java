@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -18,17 +18,9 @@ package org.icemobile.component;
 
 import org.icemobile.util.ClientDescriptor;
 
-public interface IMobiComponent {
+public interface IMobiComponent extends IBaseComponent{
 
-    public void setStyle(String style) ;
-    public String getStyle() ;
-    public void setStyleClass(String styleClass);
-    public String getStyleClass() ;
     public void setDisabled(boolean disabled);
     public boolean isDisabled();
-    public String getClientId();
     public ClientDescriptor getClient();
-
-
-
 }

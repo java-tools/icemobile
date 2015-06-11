@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -17,19 +17,26 @@
 #import <Foundation/Foundation.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreMotion/CoreMotion.h>
+#import <CoreLocation/CoreLocation.h>
 #import <AddressBookUI/AddressBookUI.h>
+#import <MessageUI/MessageUI.h>
 #import "NativeInterfaceViewController.h"
 
 @class MainViewController;
 @class QRScanner;
 @class ARViewController;
 
-@interface NativeInterface : NSObject<UIImagePickerControllerDelegate, 
-        UINavigationControllerDelegate,  ABPeoplePickerNavigationControllerDelegate> {
+@interface NativeInterface : NSObject<
+        UIImagePickerControllerDelegate,
+        UINavigationControllerDelegate,
+        ABPeoplePickerNavigationControllerDelegate,
+        MFMessageComposeViewControllerDelegate,
+        CLLocationManagerDelegate> {
 
 	UIViewController<NativeInterfaceViewController> *controller;
     NSString *userAgent;
     NSString *activeDOMElementId;
+    NSString *geospyName;
     NSString *maxwidth;
     NSString *maxheight;
     NSString *soundFilePath;
@@ -46,18 +53,20 @@
     UIPopoverController *augPopover;
     ARViewController *augController;
     CMMotionManager *motionManager;
+    CLLocationManager *locationManager;
     CGRect popoverSource;
 }
 
 @property (retain) UIViewController<NativeInterfaceViewController> *controller;
 @property (retain) NSString *userAgent;
 @property (retain) NSString *activeDOMElementId;
+@property (retain) NSString *geospyName;
 @property (retain) NSString *maxwidth;
 @property (retain) NSString *maxheight;
 @property (retain) NSString *soundFilePath;
 @property (nonatomic, assign) NSInteger nextFileIndex;
 @property (nonatomic, assign) BOOL recording;
-@property (assign) BOOL uploading;
+@property (atomic, assign) BOOL uploading;
 @property (retain) NSMutableData *receivedData;
 @property (retain) QRScanner *qrScanner;
 @property (nonatomic, retain) UIImagePickerController *currentPicker;
@@ -68,6 +77,7 @@
 @property (nonatomic, retain) UIPopoverController *augPopover;
 @property (nonatomic, retain) ARViewController *augController;
 @property (nonatomic, retain) CMMotionManager *motionManager;
+@property (nonatomic, retain) CLLocationManager *locationManager;
 @property (nonatomic, assign) CGRect popoverSource;
 
 - (void) applicationWillResignActive;
@@ -83,6 +93,7 @@
 - (void)augMarkerView:(NSString*)augId withMarkers:(NSDictionary*)markers;
 - (void)augHide;
 - (void)augDone;
+- (void)augFormDone:(NSString*)result;
 - (void)augDismiss;
 - (void)augMarkerDismiss;
 - (void)startMotionManager;
@@ -90,7 +101,9 @@
 - (void)recordStart;
 - (void)recordStop;
 - (void)recordDismiss;
+- (void)recordCancel;
 - (void)recordDone;
+- (void)setProgress:(NSInteger)percent withLabel:(NSString*)labelText;
 - (NSMutableDictionary*)parseQuery: (NSString*)queryString;
 - (void)showImagePicker: (UIImagePickerController*)picker;
 - (void)dismissImagePicker;

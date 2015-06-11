@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -18,6 +18,10 @@ package org.icefaces.mobi.component.submitnotification;
 import org.icefaces.ace.meta.annotation.Component;
 import org.icefaces.ace.meta.annotation.Property;
 import org.icefaces.ace.meta.baseMeta.UIPanelMeta;
+import org.icefaces.mobi.utils.TLDConstants;
+
+import javax.faces.application.ResourceDependencies;
+import javax.faces.application.ResourceDependency;
 
 @Component(
         tagName = "submitNotification",
@@ -30,15 +34,19 @@ import org.icefaces.ace.meta.baseMeta.UIPanelMeta;
         componentFamily = "org.icefaces.SubmitNotification",
         tlddoc = "submitNoftification " +
                 "renders a panel, to be used with any mobi commandButton, which blocks any other submission until a response is recieved and the update completes.")
+
+@ResourceDependencies({
+        @ResourceDependency(library = "org.icefaces.component.util", name = "component.js")
+})
 public class SubmitNotificationMeta extends UIPanelMeta {
 
-    @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.TABINDEX)
-    private int tabindex;
+    @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.STYLE)
+    private String style;
 
-     @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.STYLE)
-     private String style;
+    @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.STYLECLASS)
+    private String styleClass;
 
-     @Property(tlddoc = org.icefaces.mobi.utils.TLDConstants.STYLECLASS)
-     private String styleClass;
+    @Property(tlddoc = TLDConstants.DISABLED)
+    private boolean disabled;
 
 }

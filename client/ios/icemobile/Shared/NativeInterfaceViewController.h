@@ -1,5 +1,5 @@
 /*
-* Copyright 2004-2011 ICEsoft Technologies Canada Corp. (c)
+* Copyright 2004-2013 ICEsoft Technologies Canada Corp. (c)
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -28,5 +28,6 @@
 - (void) setThumbnail: (UIImage*)image at: (NSString *)thumbID;
 - (void) handleResponse:(NSString *)responseString;
 - (void) setProgress:(NSInteger)percent;
+- (void) setProgressLabel:(NSString*)labelText;
 
 @end

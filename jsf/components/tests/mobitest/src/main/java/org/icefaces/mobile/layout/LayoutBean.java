@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -57,7 +57,11 @@ public class LayoutBean implements Serializable {
     private String style;
     private boolean scrollablePaneContent;
     private long timestamp;
-    private long headTimestamp; 
+    private long headTimestamp;
+    private String orientation="top";
+    private boolean fixedPosition=false;
+    private String inputString;
+    private String inputString2;
 
 	public LayoutBean(){
         this.selectedPane = FIRSTPANE;
@@ -81,7 +85,6 @@ public class LayoutBean implements Serializable {
             "../../images/Joker.jpg", "joker", "Joker"));
         counter = eachContentPane.size();
         disabled = false;
-        this.fixedHeightString="120px";
         this.scrollablePaneContent = true;
     }
 
@@ -114,11 +117,36 @@ public class LayoutBean implements Serializable {
             }
         }
     }
+
+    public String getInputString() {
+        return inputString;
+    }
+
+    public void setInputString(String inputString) {
+        this.inputString = inputString;
+    }
+
+    public String getInputString2() {
+        return inputString2;
+    }
+
+    public void setInputString2(String inputString2) {
+        this.inputString2 = inputString2;
+    }
+
     public void clearFixedHeight(ActionEvent evt){
         this.fixedHeightString = "";
     }
     public void changeToPane3(){
         this.selectedPane = THIRDPANE;
+    }
+
+    public boolean isFixedPosition() {
+        return fixedPosition;
+    }
+
+    public void setFixedPosition(boolean fixedPosition) {
+        this.fixedPosition = fixedPosition;
     }
 
     public boolean isAutoHeight() {
@@ -135,6 +163,14 @@ public class LayoutBean implements Serializable {
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+    }
+
+    public String getOrientation() {
+        return orientation;
+    }
+
+    public void setOrientation(String orientation) {
+        this.orientation = orientation;
     }
 
     public boolean isFixedHeight() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -46,11 +46,17 @@ mobi.flipswitch = {
         if (this.flipperEl){
             var oldClass = this.flipperEl.className;
             var value = "off";
+            var onClass = this.flipperEl.children[0].className;
+            var offClass = this.flipperEl.children[2].className;
             if (oldClass.indexOf('-off ')>0){
-            	this.flipperEl.className='mobi-flip-switch mobi-flip-switch-on ';
+            	this.flipperEl.className='mobi-flipswitch mobi-flipswitch-on ui-btn-down-c';
+            	this.flipperEl.children[0].className = 'mobi-flipswitch-txt-on';
+            	this.flipperEl.children[2].className = 'mobi-flipswitch-txt-off ui-btn-up-c';
                 value = true;
             }else{
-             	this.flipperEl.className='mobi-flip-switch mobi-flip-switch-off ';
+             	this.flipperEl.className='mobi-flipswitch mobi-flipswitch-off ui-btn-down-c';
+             	this.flipperEl.children[0].className = 'mobi-flipswitch-txt-on ui-btn-up-c';
+                this.flipperEl.children[2].className = 'mobi-flipswitch-txt-off';
                	value = false;
             }
             var hidden = this.id+"_hidden";

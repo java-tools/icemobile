@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2012 ICEsoft Technologies Canada Corp.
+ * Copyright 2004-2013 ICEsoft Technologies Canada Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the
@@ -56,7 +56,9 @@ public class AugmentedRealityRenderer extends BaseInputRenderer  {
          boolean isEnhanced = clientDescriptor.isICEmobileContainer();
          boolean isAuxUpload = EnvUtils.isAuxUploadBrowser(facesContext);
          if (!isEnhanced && !isAuxUpload) {  //no container or SX, use text field
+             String myparams = ag.getParams();
              writer.startElement(HTML.INPUT_ELEM, uiComponent);
+             writer.writeAttribute("data-params", myparams, null);
              writer.writeAttribute(HTML.ID_ATTR, clientId, null);
              writer.writeAttribute(HTML.NAME_ATTR, clientId, null);
              writer.endElement(HTML.INPUT_ELEM);
@@ -65,6 +67,9 @@ public class AugmentedRealityRenderer extends BaseInputRenderer  {
          writer.startElement(HTML.BUTTON_ELEM, uiComponent);
          writer.writeAttribute(HTML.ID_ATTR, clientId, null);
          String buttonValue=ag.getButtonLabel();
+        if (MobiJSFUtils.uploadInProgress(ag))  {
+            buttonValue = ag.getCaptureMessageLabel();
+        } 
          if (null!=ag.getStyle()){
              String style= ag.getStyle();
              if ( style.trim().length() > 0) {
@@ -107,6 +112,8 @@ public class AugmentedRealityRenderer extends BaseInputRenderer  {
             writer.writeAttribute("data-command", "aug", null);
             String sessionId = MobiJSFUtils.getSessionIdCookie();
             writer.writeAttribute("data-jsessionid", sessionId, null);
+            writer.writeAttribute("data-postURL",
+                    MobiJSFUtils.getPostURL(), null);;
             script = "ice.mobi.sx(this);";
         } else {
             script = "ice.aug( '" + clientId + "', '" + 
